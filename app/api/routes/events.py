@@ -27,7 +27,7 @@ async def get_single_event(
     pass
 
 
-@router.get("/{event_id}/seats", response_model=BaseModel)
+@router.get("/{event_id}/seats", response_model=api_events.EventSeatsResponse)
 async def get_seats_by_event(
     event_id: str,
 ) -> BaseModel:
