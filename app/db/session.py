@@ -1,3 +1,4 @@
+import os
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.pool import NullPool
@@ -7,11 +8,9 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.core.config import settings
-
 
 engine = create_async_engine(
-    settings.database_url,
+    os.environ.get("POSTGRES_CONNECTION_STRING"),
     poolclass=NullPool,
     echo=False,
 )

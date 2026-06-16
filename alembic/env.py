@@ -6,8 +6,6 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.core.config import settings
-
 from app.db.base import Base
 from app.models.event import Event # noqa: F401
 from app.models.place import Place # noqa: F401
@@ -26,7 +24,7 @@ if config.config_file_name is not None:
 
 config.set_main_option(
     "sqlalchemy.url",
-    settings.database_url.replace("+asyncpg", ""),
+    os.environ.get("POSTGRES_CONNECTION_STRING").replace("+asyncpg", ""),
 )
 
 # add your model's MetaData object here
