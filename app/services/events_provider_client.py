@@ -10,9 +10,9 @@ from typing import Any
 
 class EventsProviderClient:
     def __init__(self) -> None:
-        self.base_url = os.environ.get("EVENTS_PROVIDER_HOST")
+        self.base_url = os.environ.get("EVENT_PROVIDER_HOST")
         self.headers = {
-            "x-api-key": os.environ.get("EVENTS_PROVIDER_API_KEY"),
+            "x-api-key": os.environ.get("EVENT_PROVIDER_API_KEY"),
         }
 
     async def events(
