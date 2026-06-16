@@ -5,6 +5,7 @@ from uuid import UUID
 from datetime import date
 
 from pydantic import BaseModel
+from typing import Any
 
 
 class EventsProviderClient:
@@ -17,7 +18,7 @@ class EventsProviderClient:
     async def events(
         self, 
         changed_at: date
-    ) -> BaseModel:
+    ) -> dict[str, Any]:
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.base_url}/api/events/",
@@ -34,7 +35,7 @@ class EventsProviderClient:
     async def seats(
         self,
         event_id: UUID,
-    ) -> BaseModel:
+    ) -> dict[str, Any]:
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.base_url}/api/events/{event_id}/seats/",
@@ -49,7 +50,7 @@ class EventsProviderClient:
         self,
         event_id: UUID,
         payload: BaseModel,
-    ) -> BaseModel:
+    ) -> dict[str, Any]:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.base_url}/api/events/{event_id}/register/",
@@ -65,7 +66,7 @@ class EventsProviderClient:
         self, 
         event_id: UUID,
         payload: BaseModel,
-    ) -> BaseModel:
+    ) -> dict[str, Any]:
         async with httpx.AsyncClient() as client:
             response = await client.delete(
                 f"{self.base_url}/api/events/{event_id}/unregister/",
