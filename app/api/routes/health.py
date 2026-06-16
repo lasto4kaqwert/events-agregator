@@ -38,6 +38,7 @@ async def health_db(
     
 @router.get("/test-provider")
 async def health_test_provider():
+
     events_provider = EventsProviderClient()
 
     return await events_provider.events(
