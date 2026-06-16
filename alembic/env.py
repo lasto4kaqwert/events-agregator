@@ -24,7 +24,7 @@ if config.config_file_name is not None:
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.environ.get("POSTGRES_CONNECTION_STRING").replace("+asyncpg", ""),
+    os.environ.get("POSTGRES_CONNECTION_STRING").replace("postgres://", "postgresql://"),
 )
 
 # add your model's MetaData object here

@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import (
 
 
 engine = create_async_engine(
-    os.environ.get("POSTGRES_CONNECTION_STRING"),
+    os.environ
+    .get("POSTGRES_CONNECTION_STRING")
+    .replace("postgres://", "postgresql+asyncpg://"),
     poolclass=NullPool,
     echo=False,
 )
