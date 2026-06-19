@@ -1,17 +1,11 @@
-from typing import TYPE_CHECKING
-
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Integer, String, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
-
-if TYPE_CHECKING:
-    from .place import Place
-    from .tickets import Ticket
+from app.models.base import Base
 
 
 class Event(Base):
@@ -22,13 +16,9 @@ class Event(Base):
         primary_key=True,
     )
 
-    place_id: Mapped[int] = mapped_column(
-        ForeignKey("places.id"),
+    place: Mapped[dict] = mapped_column(
+        JSONB,
         nullable=False,
-    )
-
-    place: Mapped["Place"] = relationship(
-        back_populates="events"
     )
 
     name: Mapped[str] = mapped_column(
@@ -56,24 +46,4 @@ class Event(Base):
         Integer,
         nullable=False,
         default=0,
-    )
-
-    seats: Mapped[list["Ticket"]] = relationship(
-        back_populates="event",
-        cascade="all, delete-orphan",
-    )
-
-    changed_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-    )
-
-    status_changed_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
     )

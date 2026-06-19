@@ -1,11 +1,11 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base
+from app.models.base import Base
 
 
 class SyncRun(Base):
@@ -22,6 +22,11 @@ class SyncRun(Base):
         nullable=False,
     )
 
+    describe: Mapped[str] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     started_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -30,4 +35,9 @@ class SyncRun(Base):
     finished_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=True,
+    )
+
+    changed_at: Mapped[date] = mapped_column(
+        DateTime,
+        nullable=False,
     )
