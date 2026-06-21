@@ -18,13 +18,13 @@ class EventsPaginator:
         self.client = client
         self.changed_at = changed_at
 
-    # def _url_to_https(
-    #     self,
-    #     url: str | None
-    # ) -> str | None:
-    #     if not url:
-    #         return None
-    #     return url.replace("http://", "https://")
+    def _url_to_https(
+        self,
+        url: str | None
+    ) -> str | None:
+        if not url:
+            return None
+        return url.replace("http://", "https://")
 
     async def __aiter__(self) -> AsyncIterator[ExternalAPIEventDescribeSchema]:
         page = await self.client._fetch_events(
@@ -38,5 +38,5 @@ class EventsPaginator:
             if not page.next:
                 break
 
-            # page = await self.client._next_events(self._url_to_https(page.next))
-            page = await self.client._next_events(page.next)
+            page = await self.client._next_events(self._url_to_https(page.next))
+            # page = await self.client._next_events(page.next)

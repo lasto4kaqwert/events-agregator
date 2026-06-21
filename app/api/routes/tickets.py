@@ -29,7 +29,7 @@ router = APIRouter(
 )
 
 
-@router.post("", response_model=CreatedTicketSchema)
+@router.post("", response_model=CreatedTicketSchema, status_code=201)
 async def create_ticket(
     payload: LocalRepoCreateTicketSchema,
     usecase: RegisterTicketUseCase = Depends(get_register_ticket_usecase),

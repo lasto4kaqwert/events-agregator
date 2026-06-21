@@ -42,9 +42,11 @@ class RegisterTicketUseCase:
             )
 
             seats = self.cache.get(event_id=event_id)
-            self.cache.set(
-                event_id=event_id,
-                seats=seats.remove(payload.seat),
-            )
+            if seats is not None:
+                seats = seats.remove(payload.seat)
+                self.cache.set(
+                    event_id=event_id,
+                    seats=seats,
+                )
 
         return ticket

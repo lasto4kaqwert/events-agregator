@@ -42,7 +42,7 @@ class UnregisterTicketUseCase:
 
         if success.success is True:
             await self.repo.delete(ticket_id=ticket_id)
-            self.cache.delete(ticket_id=ticket_id)
+            self.cache.delete(event_id=ticket.event_id)
         else:
             raise TicketNotFoundError(f"Ticket {ticket_id} not found")
         

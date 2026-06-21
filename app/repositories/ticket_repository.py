@@ -39,15 +39,12 @@ class TicketRepository:
         self,
         ticket_id: uuid.UUID,
     ) -> None:
-        ticket = self.get(ticket_id=ticket_id)
+        ticket = await self.session.get(Ticket, ticket_id)
 
         if ticket is None:
             raise TicketNotFoundError(f"Ticket {ticket_id} not found")
 
-        await self.session.delete(Ticket(
-            ticket_id=ticket.ticket_id,
-            event_id=ticket.event_id,
-        ))
+        await self.session.delete(ticket)
         await self.session.commit()
 
     async def create(

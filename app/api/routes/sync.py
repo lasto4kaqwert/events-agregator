@@ -32,7 +32,6 @@ async def get_last_syn(
 ) -> SyncRunSchema:
     return await usecase.do()
 
-
 @router.post("/trigger", response_model=SyncRunSchema)
 async def run_sync(
     usecase: TriggerSyncUseCase = Depends(get_trigger_sync_usecase),
