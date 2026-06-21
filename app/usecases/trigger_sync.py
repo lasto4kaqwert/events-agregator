@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
@@ -11,6 +12,9 @@ if TYPE_CHECKING:
     from app.clients.events_provider_client import EventsProviderClient
     from app.repositories.event_repository import EventRepository
     from app.repositories.sync_repository import SyncRepository
+
+
+logger = logging.getLogger(__name__)
 
 
 class TriggerSyncUseCase:
@@ -64,7 +68,11 @@ class TriggerSyncUseCase:
         self,
         changed_at_init: date | None = None,
     ) -> SyncRunSchema:
+        logger.info(f"Events sync started: {datetime.now(timezone.utc)}")
+
         sync_run = await self.sync_repo.upsert()
+
+        logger.info(f"Sync run created: {sync_run.id}")
 
         latest_changed_at: datetime | None = None
 
@@ -79,8 +87,12 @@ class TriggerSyncUseCase:
                 latest_changed_at = self._extract_changed_at(
                     last_success_sync.changed_at
                 )
+
+                logger.info(f"Incremental sync started from {changed_at}")
             else:
                 changed_at = self._get_init_date(changed_at_init)
+
+                logger.info(f"Initial sync started from {changed_at}")
 
             batch: list[ExternalAPIEventDescribeSchema] = []
 
@@ -98,8 +110,12 @@ class TriggerSyncUseCase:
                     await self.event_repo.upsert(batch)
                     batch.clear()
 
+                    logger.info(f"Events batch saved: {len(batch)}")
+
             if batch:
                 await self.event_repo.upsert(batch)
+
+                logger.info(f"Events final batch saved: {len(batch)}")
 
             updated = await self.sync_repo.upsert(
                 sync_id=sync_run.id,
@@ -109,9 +125,17 @@ class TriggerSyncUseCase:
                 describe=None,
             )
 
+            logger.info(
+                f"Events sync finished successfully: {sync_run.id}, {latest_changed_at}"
+            )
+
             return SyncRunSchema.model_validate(updated)
 
         except Exception as exc:
+            logger.exception(
+                f"Events sync failed: {sync_run.id}, {last_success_sync}, {str(exc)}"
+            )
+
             failed = await self.sync_repo.upsert(
                 sync_id=sync_run.id,
                 status=SyncStatus.FAILED,

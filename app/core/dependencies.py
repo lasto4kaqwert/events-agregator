@@ -31,6 +31,7 @@ def get_seats_cache() -> SeatsCache:
     return seats_cache
 
 
+
 ########################################
 # SYNCS
 ########################################

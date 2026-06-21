@@ -36,7 +36,7 @@ class EventsProviderClient:
             changed_at=changed_at,
         )
 
-    async def _fetch_events(
+    async def fetch_events(
         self,
         changed_at: date,
     ) -> ExternalAPIEventsSchema:
@@ -58,7 +58,7 @@ class EventsProviderClient:
 
         return ExternalAPIEventsSchema.model_validate(response.json())
 
-    async def _next_events(
+    async def next_events(
         self,
         next: str,
     ) -> ExternalAPIEventsSchema:
