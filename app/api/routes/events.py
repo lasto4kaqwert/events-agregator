@@ -50,8 +50,8 @@ async def get_seats(
     avaiable_seats = await service.get_avaiable_seats(
         event_id=event_id,
     )
-    
+
     return LocalRepoAvaiableSeatsSchema(
         event_id=event_id,
-        seats=avaiable_seats.seats,
+        available_seats=avaiable_seats.seats,
     )

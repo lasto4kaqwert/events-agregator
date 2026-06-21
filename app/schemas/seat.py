@@ -9,4 +9,4 @@ class ExternalAPIAvaiableSeatsSchema(BaseModel):
 
 class LocalRepoAvaiableSeatsSchema(BaseModel):
     event_id: uuid.UUID
-    seats: list[str]
+    available_seats: list[str]

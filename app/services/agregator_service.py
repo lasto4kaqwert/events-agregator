@@ -79,7 +79,7 @@ class AgregatorService:
 
         return LocalRepoAvaiableSeatsSchema(
             event_id=event_id,
-            seats=seats_result.seats,
+            available_seats=seats_result.seats,
         )
     
     async def create_ticket(
