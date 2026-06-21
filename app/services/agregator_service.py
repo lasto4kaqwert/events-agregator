@@ -89,7 +89,7 @@ class AgregatorService:
     ) -> CreatedTicketSchema:
         avaiable_seats = await self.get_avaiable_seats(event_id=event_id)
 
-        if payload.seat not in avaiable_seats.seats:
+        if payload.seat not in avaiable_seats.available_seats:
             raise SeatIsNotAvaiableError(f"Seat {payload.seat} is not avaiable for {event_id}")
         
         ticket = await self.external.register(
