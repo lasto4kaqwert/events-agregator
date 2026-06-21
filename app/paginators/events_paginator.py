@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import AsyncIterator, TYPE_CHECKING
+from typing import TYPE_CHECKING, AsyncIterator
 
 from app.schemas.event import ExternalAPIEventDescribeSchema
 
@@ -18,10 +18,7 @@ class EventsPaginator:
         self.client = client
         self.changed_at = changed_at
 
-    def _url_to_https(
-        self,
-        url: str | None
-    ) -> str | None:
+    def _url_to_https(self, url: str | None) -> str | None:
         if not url:
             return None
         return url.replace("http://", "https://")

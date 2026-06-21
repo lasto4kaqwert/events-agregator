@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class ExternalAPICreateTicketSchema(BaseModel):
@@ -8,6 +8,7 @@ class ExternalAPICreateTicketSchema(BaseModel):
     last_name: str
     seat: str
     email: EmailStr
+
 
 class LocalRepoCreateTicketSchema(BaseModel):
     event_id: uuid.UUID

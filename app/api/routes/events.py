@@ -11,18 +11,17 @@ from app.core.dependencies import (
     get_getter_events_usecase,
     get_getter_seats_usecase,
 )
-
 from app.schemas.event import (
-    LocalRepoEventsSchema,
     LocalRepoEventDescribeSchema,
+    LocalRepoEventsSchema,
 )
 from app.schemas.seat import LocalRepoAvaiableSeatsSchema
 
 if TYPE_CHECKING:
     from app.usecases import (
         GetEventsUseCase,
-        GetSeatsUseCase,
         GetEventUseCase,
+        GetSeatsUseCase,
     )
 
 router = APIRouter(
@@ -53,14 +52,14 @@ async def get_events(
     if offset + page_size < events.count:
         next_url = str(
             request.url.include_query_params(
-                page=page+1,
+                page=page + 1,
                 page_size=page_size,
             )
         )
     if page > 1:
         previous_url = str(
             request.url.include_query_params(
-                page=page-1,
+                page=page - 1,
                 page_size=page_size,
             )
         )

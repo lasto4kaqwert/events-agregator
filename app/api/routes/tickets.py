@@ -9,12 +9,11 @@ from app.core.dependencies import (
     get_register_ticket_usecase,
     get_unregister_ticket_usecase,
 )
-
 from app.schemas.ticket import (
-    ExternalAPICreateTicketSchema,
-    LocalRepoCreateTicketSchema,
     CreatedTicketSchema,
     DeletedTicketSchema,
+    ExternalAPICreateTicketSchema,
+    LocalRepoCreateTicketSchema,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +40,7 @@ async def create_ticket(
             last_name=payload.last_name,
             seat=payload.seat,
             email=payload.email,
-        )
+        ),
     )
 
 

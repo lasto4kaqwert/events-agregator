@@ -1,29 +1,27 @@
-import httpx
-
-from uuid import UUID
 from datetime import date
 from typing import AsyncIterator
+from uuid import UUID
 
-from app.paginators.events_paginator import EventsPaginator
-
-from app.schemas.event import ExternalAPIEventsSchema, ExternalAPIEventDescribeSchema
-from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
-from app.schemas.ticket import (
-    ExternalAPICreateTicketSchema,
-    ExternalAPIDeleteTicketSchema,
-    CreatedTicketSchema,
-    DeletedTicketSchema,
-)
+import httpx
 
 from app.core.exceptions import ExternalAPIError
+from app.paginators.events_paginator import EventsPaginator
+from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
+from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
+from app.schemas.ticket import (
+    CreatedTicketSchema,
+    DeletedTicketSchema,
+    ExternalAPICreateTicketSchema,
+    ExternalAPIDeleteTicketSchema,
+)
 
 
 class EventsProviderClient:
     def __init__(
-            self, 
-            base_url: str,
-            api_key: str,
-        ) -> None:
+        self,
+        base_url: str,
+        api_key: str,
+    ) -> None:
         self.base_url = base_url
         self.headers = {
             "x-api-key": api_key,
@@ -120,7 +118,7 @@ class EventsProviderClient:
         return CreatedTicketSchema.model_validate(response.json())
 
     async def unregister(
-        self, 
+        self,
         event_id: UUID,
         payload: ExternalAPIDeleteTicketSchema,
     ) -> DeletedTicketSchema:

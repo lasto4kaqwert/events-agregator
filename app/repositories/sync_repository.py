@@ -1,15 +1,12 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select, desc
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_session
-
+from app.core.exceptions import SynchronizationNotFoundError
 from app.models.sync_run import SyncRun
 from app.schemas.sync import SyncRunSchema, SyncStatus
-
-from app.core.exceptions import SynchronizationNotFoundError
 
 
 class SyncRepository:
@@ -60,13 +57,15 @@ class SyncRepository:
             sync_id = uuid.uuid4()
 
         sync_run = await self.session.get(SyncRun, sync_id)
-        
+
         if sync_run is None:
             sync_run = SyncRun(id=sync_id)
             self.session.add(sync_run)
 
         sync_run.status = status or sync_run.status or SyncStatus.RUNNING
-        sync_run.started_at = started_at or sync_run.started_at or datetime.now(timezone.utc)
+        sync_run.started_at = (
+            started_at or sync_run.started_at or datetime.now(timezone.utc)
+        )
         sync_run.finished_at = finished_at or sync_run.finished_at
         sync_run.changed_at = changed_at or sync_run.changed_at
         sync_run.describe = describe or sync_run.describe

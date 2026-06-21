@@ -4,8 +4,8 @@ import uuid
 from typing import TYPE_CHECKING
 
 from app.schemas.ticket import (
-    ExternalAPICreateTicketSchema, 
     CreatedTicketSchema,
+    ExternalAPICreateTicketSchema,
 )
 
 if TYPE_CHECKING:

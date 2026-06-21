@@ -3,12 +3,9 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_session
-
+from app.core.exceptions import TicketNotFoundError
 from app.models.ticket import Ticket
 from app.schemas.ticket import LocalRepoTicketSchema
-
-from app.core.exceptions import TicketNotFoundError
 
 
 class TicketRepository:
@@ -29,12 +26,12 @@ class TicketRepository:
 
         if event_id is None:
             raise TicketNotFoundError(f"Ticket {ticket_id} not found")
-        
+
         return LocalRepoTicketSchema(
             event_id=event_id,
             ticket_id=ticket_id,
         )
-    
+
     async def delete(
         self,
         ticket_id: uuid.UUID,

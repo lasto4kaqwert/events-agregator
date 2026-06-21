@@ -1,6 +1,7 @@
 import time
 import uuid
 
+
 class SeatsCache:
     def __init__(
         self,
@@ -17,15 +18,15 @@ class SeatsCache:
 
         if cached is None:
             return None
-        
+
         created_at, seats = cached
 
         if time.monotonic() - created_at > self.total_seconds:
             self._storage.pop(event_id, None)
             return None
-        
+
         return seats
-    
+
     def set(
         self,
         event_id: uuid.UUID,
@@ -36,8 +37,5 @@ class SeatsCache:
             seats,
         )
 
-    def delete(
-        self,
-        event_id: uuid.UUID
-    ) -> None:
+    def delete(self, event_id: uuid.UUID) -> None:
         self._storage.pop(event_id, None)

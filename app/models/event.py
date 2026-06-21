@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Integer, String, DateTime
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import DateTime, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -25,7 +25,7 @@ class Event(Base):
         String(255),
         nullable=False,
     )
-    
+
     event_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

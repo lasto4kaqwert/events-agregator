@@ -1,19 +1,16 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.session import get_session
-
+from app.core.exceptions import EventNotFoundError
 from app.models.event import Event
 from app.schemas.event import (
-    LocalRepoEventsSchema, 
     LocalRepoEventDescribeSchema,
+    LocalRepoEventsSchema,
     LocalRepoPlaceDescribeSchema,
 )
-
-from app.core.exceptions import EventNotFoundError
 
 
 class EventRepository:
@@ -54,11 +51,13 @@ class EventRepository:
         count_result = await self.session.execute(count_stmt)
         count = count_result.scalar_one()
 
-        events_stmt = stmt.order_by(Event.event_time.desc()).limit(page_size).offset(offset)
+        events_stmt = (
+            stmt.order_by(Event.event_time.desc()).limit(page_size).offset(offset)
+        )
 
         events_result = await self.session.execute(events_stmt)
         events = events_result.scalars().all()
-        
+
         return LocalRepoEventsSchema(
             count=count,
             next=None,
@@ -77,7 +76,7 @@ class EventRepository:
 
         if event is None:
             raise EventNotFoundError(f"Event {event_id} not found")
-        
+
         return self._map_event(event=event)
 
     async def upsert(

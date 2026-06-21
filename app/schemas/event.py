@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+
 class ExternalAPIPlaceDescribeSchema(BaseModel):
     id: uuid.UUID
     name: str
@@ -48,6 +49,7 @@ class ExternalAPIEventsSchema(BaseModel):
     next: str | None = None
     previous: str | None = None
     results: list[ExternalAPIEventDescribeSchema]
+
 
 class LocalRepoEventsSchema(BaseModel):
     count: int

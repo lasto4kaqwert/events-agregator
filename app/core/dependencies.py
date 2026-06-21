@@ -3,25 +3,21 @@ import os
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.session import get_session
-
 from app.clients.events_provider_client import EventsProviderClient
-
+from app.core.session import get_session
 from app.repositories.event_repository import EventRepository
 from app.repositories.sync_repository import SyncRepository
 from app.repositories.ticket_repository import TicketRepository
-
 from app.services.seats_cache import SeatsCache
-
 from app.usecases import (
+    GetEventsUseCase,
+    GetEventUseCase,
+    GetSeatsUseCase,
     GetSyncUseCase,
     LastSyncUseCase,
-    TriggerSyncUseCase,
     RegisterTicketUseCase,
+    TriggerSyncUseCase,
     UnregisterTicketUseCase,
-    GetEventUseCase,
-    GetEventsUseCase,
-    GetSeatsUseCase,
 )
 
 ########################################
@@ -34,9 +30,11 @@ seats_cache = SeatsCache(total_seconds=30)
 def get_seats_cache() -> SeatsCache:
     return seats_cache
 
+
 ########################################
 # SYNCS
 ########################################
+
 
 async def get_getter_sync_usesace(
     session: AsyncSession = Depends(get_session),
@@ -66,9 +64,11 @@ async def get_trigger_sync_usecase(
         ),
     )
 
+
 ########################################
 # TICKETS
 ########################################
+
 
 async def get_register_ticket_usecase(
     session: AsyncSession = Depends(get_session),
@@ -95,9 +95,11 @@ async def get_unregister_ticket_usecase(
         cache=get_seats_cache(),
     )
 
+
 ########################################
 # EVENTS
 ########################################
+
 
 async def get_getter_events_usecase(
     session: AsyncSession = Depends(get_session),
@@ -108,7 +110,7 @@ async def get_getter_events_usecase(
 
 
 async def get_getter_event_usecase(
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ) -> GetEventUseCase:
     return GetEventUseCase(
         repo=EventRepository(session=session),
@@ -116,7 +118,7 @@ async def get_getter_event_usecase(
 
 
 async def get_getter_seats_usecase(
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
 ) -> GetSeatsUseCase:
     return GetSeatsUseCase(
         repo=EventRepository(session=session),

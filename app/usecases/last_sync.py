@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from fastapi import Depends
-
-from app.schemas.sync import SyncRunSchema, SyncStatus
+from app.schemas.sync import SyncRunSchema
 
 if TYPE_CHECKING:
     from app.repositories.sync_repository import SyncRepository

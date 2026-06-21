@@ -1,19 +1,16 @@
 from __future__ import annotations
 
+import os
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
 
-import os
-from datetime import datetime, date, timezone
-
-from app.schemas.sync import SyncRunSchema, SyncStatus
 from app.schemas.event import ExternalAPIEventDescribeSchema
+from app.schemas.sync import SyncRunSchema, SyncStatus
 
 if TYPE_CHECKING:
     from app.clients.events_provider_client import EventsProviderClient
-
     from app.repositories.event_repository import EventRepository
     from app.repositories.sync_repository import SyncRepository
-    
 
 
 class TriggerSyncUseCase:

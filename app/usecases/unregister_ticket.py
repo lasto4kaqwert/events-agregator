@@ -3,12 +3,11 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from app.schemas.ticket import (
-    ExternalAPIDeleteTicketSchema, 
-    DeletedTicketSchema,
-)
-
 from app.core.exceptions import TicketNotFoundError
+from app.schemas.ticket import (
+    DeletedTicketSchema,
+    ExternalAPIDeleteTicketSchema,
+)
 
 if TYPE_CHECKING:
     from app.clients.events_provider_client import EventsProviderClient
@@ -27,17 +26,14 @@ class UnregisterTicketUseCase:
         self.client = client
         self.cache = cache
 
-    async def do(
-        self,
-        ticket_id: uuid.UUID
-    ) -> DeletedTicketSchema:
+    async def do(self, ticket_id: uuid.UUID) -> DeletedTicketSchema:
         ticket = await self.repo.get(ticket_id=ticket_id)
 
         success = await self.client.unregister(
             event_id=ticket.event_id,
             payload=ExternalAPIDeleteTicketSchema(
                 ticket_id=ticket_id,
-            )
+            ),
         )
 
         if success.success is True:
@@ -45,5 +41,5 @@ class UnregisterTicketUseCase:
             self.cache.delete(event_id=ticket.event_id)
         else:
             raise TicketNotFoundError(f"Ticket {ticket_id} not found")
-        
+
         return success
