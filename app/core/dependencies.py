@@ -66,6 +66,18 @@ async def get_trigger_sync_usecase(
     )
 
 
+async def build_trigger_sync_usecase(
+    session: AsyncSession,
+) -> TriggerSyncUseCase:
+    return TriggerSyncUseCase(
+        sync_repo=SyncRepository(session=session),
+        event_repo=EventRepository(session=session),
+        client=EventsProviderClient(
+            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
+            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+        ),
+    )
+
 ########################################
 # TICKETS
 ########################################

@@ -15,9 +15,8 @@ RUN pip install --upgrade pip \
 
 COPY . .
 
-COPY --chown=appuser:appuser /app/main.py .
+RUN chmod +x ./entrypoint.sh
 
 USER appuser
 
-CMD ["sh", "-c", "alembic upgrade head && \
-    exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["bash", "./entrypoint.sh"]

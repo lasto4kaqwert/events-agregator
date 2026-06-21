@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -13,6 +14,13 @@ if TYPE_CHECKING:
     from app.repositories.event_repository import EventRepository
     from app.repositories.sync_repository import SyncRepository
 
+
+logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        handlers=[logging.StreamHandler(sys.stdout)],
+        force=True,
+    )
 
 logger = logging.getLogger(__name__)
 
