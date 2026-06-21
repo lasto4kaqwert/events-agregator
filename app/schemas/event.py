@@ -18,6 +18,7 @@ class LocalRepoPlaceDescribeSchema(BaseModel):
     name: str
     city: str
     address: str
+    seats_pattern: str
 
 
 class ExternalAPIEventDescribeSchema(BaseModel):

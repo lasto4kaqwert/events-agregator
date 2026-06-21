@@ -10,7 +10,7 @@ from app.schemas.event import (
     LocalRepoEventsSchema,
     LocalRepoEventDescribeSchema,
 )
-from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
+from app.schemas.seat import LocalRepoAvaiableSeatsSchema
 
 router = APIRouter(
     prefix="/events",
@@ -42,11 +42,16 @@ async def get_event_by_id(
     )
 
 
-@router.get("/{event_id}/seats", response_model=ExternalAPIAvaiableSeatsSchema)
+@router.get("/{event_id}/seats", response_model=LocalRepoAvaiableSeatsSchema)
 async def get_seats(
     event_id: uuid.UUID,
     service: AgregatorService = Depends(get_agregator_service),
-) -> ExternalAPIAvaiableSeatsSchema:
-    return await service.get_avaiable_seats(
+) -> LocalRepoAvaiableSeatsSchema:
+    avaiable_seats = await service.get_avaiable_seats(
         event_id=event_id,
+    )
+    
+    return LocalRepoAvaiableSeatsSchema(
+        event_id=event_id,
+        seats=avaiable_seats.seats,
     )
