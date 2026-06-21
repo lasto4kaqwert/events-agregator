@@ -17,6 +17,11 @@ class LocalRepoCreateTicketSchema(BaseModel):
     email: EmailStr
 
 
+class LocalRepoTicketSchema(BaseModel):
+    event_id: uuid.UUID
+    ticket_id: uuid.UUID
+
+
 class ExternalAPIDeleteTicketSchema(BaseModel):
     ticket_id: uuid.UUID
 

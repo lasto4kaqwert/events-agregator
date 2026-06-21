@@ -2,8 +2,11 @@ import httpx
 
 from uuid import UUID
 from datetime import date
+from typing import AsyncIterator
 
-from app.schemas.event import ExternalAPIEventsSchema
+from app.paginators.events_paginator import EventsPaginator
+
+from app.schemas.event import ExternalAPIEventsSchema, ExternalAPIEventDescribeSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
 from app.schemas.ticket import (
     ExternalAPICreateTicketSchema,
@@ -15,7 +18,7 @@ from app.schemas.ticket import (
 from app.core.exceptions import ExternalAPIError
 
 
-class ExternalAPIService:
+class EventsProviderClient:
     def __init__(
             self, 
             base_url: str,
@@ -25,6 +28,15 @@ class ExternalAPIService:
         self.headers = {
             "x-api-key": api_key,
         }
+
+    def iter_events(
+        self,
+        changed_at: date,
+    ) -> AsyncIterator[ExternalAPIEventDescribeSchema]:
+        return EventsPaginator(
+            client=self,
+            changed_at=changed_at,
+        )
 
     async def _fetch_events(
         self,
@@ -45,8 +57,6 @@ class ExternalAPIService:
                 f"status={response.status_code}, "
                 f"body={response.text}"
             )
-        
-        response.raise_for_status()
 
         return ExternalAPIEventsSchema.model_validate(response.json())
 
@@ -67,8 +77,6 @@ class ExternalAPIService:
                 f"body={response.text}"
             )
 
-        response.raise_for_status()
-
         return ExternalAPIEventsSchema.model_validate(response.json())
 
     async def seats(
@@ -87,8 +95,6 @@ class ExternalAPIService:
                 f"status={response.status_code}, "
                 f"body={response.text}"
             )
-
-        response.raise_for_status()
 
         return ExternalAPIAvaiableSeatsSchema.model_validate(response.json())
 
@@ -111,8 +117,6 @@ class ExternalAPIService:
                 f"body={response.text}"
             )
 
-        response.raise_for_status()
-
         return CreatedTicketSchema.model_validate(response.json())
 
     async def unregister(
@@ -134,7 +138,5 @@ class ExternalAPIService:
                 f"status={response.status_code}, "
                 f"body={response.text}"
             )
-
-        response.raise_for_status()
 
         return DeletedTicketSchema.model_validate(response.json())

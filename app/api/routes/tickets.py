@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Depends
 
-from app.services.agregator_service import AgregatorService
-from app.core.dependencies import get_agregator_service
+from app.core.dependencies import (
+    get_register_ticket_usecase,
+    get_unregister_ticket_usecase,
+)
 
 from app.schemas.ticket import (
     ExternalAPICreateTicketSchema,
@@ -10,6 +16,12 @@ from app.schemas.ticket import (
     CreatedTicketSchema,
     DeletedTicketSchema,
 )
+
+if TYPE_CHECKING:
+    from app.usecases import (
+        RegisterTicketUseCase,
+        UnregisterTicketUseCase,
+    )
 
 router = APIRouter(
     prefix="/tickets",
@@ -20,9 +32,9 @@ router = APIRouter(
 @router.post("", response_model=CreatedTicketSchema)
 async def create_ticket(
     payload: LocalRepoCreateTicketSchema,
-    service: AgregatorService = Depends(get_agregator_service),
+    usecase: RegisterTicketUseCase = Depends(get_register_ticket_usecase),
 ) -> CreatedTicketSchema:
-    return await service.create_ticket(
+    return await usecase.do(
         event_id=payload.event_id,
         payload=ExternalAPICreateTicketSchema(
             first_name=payload.first_name,
@@ -36,8 +48,8 @@ async def create_ticket(
 @router.delete("/{ticket_id}", response_model=DeletedTicketSchema)
 async def delete_ticket(
     ticket_id: uuid.UUID,
-    service: AgregatorService = Depends(get_agregator_service),
+    usecase: UnregisterTicketUseCase = Depends(get_unregister_ticket_usecase),
 ) -> DeletedTicketSchema:
-    return await service.delete_ticket(
+    return await usecase.do(
         ticket_id=ticket_id,
     )

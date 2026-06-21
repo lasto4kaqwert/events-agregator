@@ -5,39 +5,110 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.session import get_session
 
-from app.services.agregator_service import AgregatorService
-from app.services.external_api_service import ExternalAPIService
-from app.services.local_repository_service import LocalRepositoryService
-from app.services.synchronization_service import SynchronizationService
+from app.clients.events_provider_client import EventsProviderClient
+
+from app.repositories.event_repository import EventRepository
+from app.repositories.sync_repository import SyncRepository
+from app.repositories.ticket_repository import TicketRepository
+
+from app.usecases import (
+    GetSyncUseCase,
+    LastSyncUseCase,
+    TriggerSyncUseCase,
+    RegisterTicketUseCase,
+    UnregisterTicketUseCase,
+    GetEventUseCase,
+    GetEventsUseCase,
+    GetSeatsUseCase,
+)
 
 
-async def get_local_repository_service(
+########################################
+# SYNCS
+########################################
+
+async def get_getter_sync_usesace(
     session: AsyncSession = Depends(get_session),
-) -> LocalRepositoryService:
-    return LocalRepositoryService(session=session)
-
-async def get_external_api_service() -> ExternalAPIService:
-    return ExternalAPIService(
-        base_url=os.environ.get("EVENT_PROVIDER_HOST"),
-        api_key=os.environ.get("EVENT_PROVIDER_API_KEY"),
+) -> GetSyncUseCase:
+    return GetSyncUseCase(
+        sync_repo=SyncRepository(session=session),
     )
 
-async def get_synchronization_service(
-    local: LocalRepositoryService = Depends(get_local_repository_service),
-    external: ExternalAPIService = Depends(get_external_api_service),
-) -> SynchronizationService:
-    return SynchronizationService(
-        local=local,
-        external=external,
+
+async def get_last_sync_usecase(
+    session: AsyncSession = Depends(get_session),
+) -> LastSyncUseCase:
+    return LastSyncUseCase(
+        sync_repo=SyncRepository(session=session),
     )
 
-async def get_agregator_service(
-    local: LocalRepositoryService = Depends(get_local_repository_service),
-    external: ExternalAPIService = Depends(get_external_api_service),
-    sync: SynchronizationService = Depends(get_synchronization_service),
-) -> AgregatorService:
-    return AgregatorService(
-        local=local,
-        external=external,
-        sync=sync,
+
+async def get_trigger_sync_usecase(
+    session: AsyncSession = Depends(get_session),
+) -> TriggerSyncUseCase:
+    return TriggerSyncUseCase(
+        sync_repo=SyncRepository(session=session),
+        event_repo=EventRepository(session=session),
+        client=EventsProviderClient(
+            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
+            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+        ),
+    )
+
+########################################
+# TICKETS
+########################################
+
+async def get_register_ticket_usecase(
+    session: AsyncSession = Depends(get_session),
+) -> RegisterTicketUseCase:
+    return RegisterTicketUseCase(
+        repo=TicketRepository(session=session),
+        client=EventsProviderClient(
+            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
+            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+        ),
+    )
+
+
+async def get_unregister_ticket_usecase(
+    session: AsyncSession = Depends(get_session),
+) -> UnregisterTicketUseCase:
+    return UnregisterTicketUseCase(
+        repo=TicketRepository(session=session),
+        client=EventsProviderClient(
+            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
+            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+        ),
+    )
+
+########################################
+# EVENTS
+########################################
+
+async def get_getter_events_usecase(
+    session: AsyncSession = Depends(get_session),
+) -> GetEventsUseCase:
+    return GetEventsUseCase(
+        repo=EventRepository(session=session),
+    )
+
+
+async def get_getter_event_usecase(
+    session: AsyncSession = Depends(get_session)
+) -> GetEventUseCase:
+    return GetEventUseCase(
+        repo=EventRepository(session=session),
+    )
+
+
+async def get_getter_seats_usecase(
+    session: AsyncSession = Depends(get_session)
+) -> GetSeatsUseCase:
+    return GetSeatsUseCase(
+        repo=EventRepository(session=session),
+        client=EventsProviderClient(
+            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
+            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+        ),
     )

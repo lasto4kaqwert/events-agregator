@@ -7,21 +7,25 @@ from datetime import datetime, date, timezone
 
 from app.schemas.sync import SyncRunSchema, SyncStatus
 from app.schemas.event import ExternalAPIEventDescribeSchema
-from app.services.events_paginator import EventsPaginator
 
 if TYPE_CHECKING:
-    from app.services.external_api_service import ExternalAPIService
-    from app.services.local_repository_service import LocalRepositoryService
+    from app.clients.events_provider_client import EventsProviderClient
+
+    from app.repositories.event_repository import EventRepository
+    from app.repositories.sync_repository import SyncRepository
+    
 
 
-class SynchronizationService:
+class TriggerSyncUseCase:
     def __init__(
         self,
-        local: "LocalRepositoryService",
-        external: "ExternalAPIService",
+        sync_repo: "SyncRepository",
+        event_repo: "EventRepository",
+        client: "EventsProviderClient",
     ) -> None:
-        self.local = local
-        self.external = external
+        self.sync_repo = sync_repo
+        self.event_repo = event_repo
+        self.client = client
 
     def _normalize_error(self, error: Exception) -> str:
         msg = str(error)
@@ -59,21 +63,16 @@ class SynchronizationService:
 
         return dt
 
-    async def sync_events(
+    async def do(
         self,
         changed_at_init: date | None = None,
     ) -> SyncRunSchema:
-        started_at = datetime.now(timezone.utc)
-
-        sync_run = await self.local.create_sync_run(
-            status=SyncStatus.RUNNING,
-            started_at=started_at,
-        )
+        sync_run = await self.sync_repo.upsert()
 
         latest_changed_at: datetime | None = None
 
         try:
-            last_success_sync = await self.local.get_last_sync_run(
+            last_success_sync = await self.sync_repo.get(
                 status=SyncStatus.SUCCESS,
                 raise_if_empty=False,
             )
@@ -88,8 +87,7 @@ class SynchronizationService:
 
             batch: list[ExternalAPIEventDescribeSchema] = []
 
-            async for event in EventsPaginator(
-                external=self.external,
+            async for event in self.client.iter_events(
                 changed_at=changed_at,
             ):
                 batch.append(event)
@@ -100,13 +98,13 @@ class SynchronizationService:
                 )
 
                 if len(batch) >= 100:
-                    await self.local.upsert_events(batch)
+                    await self.event_repo.upsert(batch)
                     batch.clear()
 
             if batch:
-                await self.local.upsert_events(batch)
+                await self.event_repo.upsert(batch)
 
-            updated = await self.local.update_sync_run(
+            updated = await self.sync_repo.upsert(
                 sync_id=sync_run.id,
                 status=SyncStatus.SUCCESS,
                 finished_at=datetime.now(timezone.utc),
@@ -117,7 +115,7 @@ class SynchronizationService:
             return SyncRunSchema.model_validate(updated)
 
         except Exception as exc:
-            await self.local.update_sync_run(
+            failed = await self.sync_repo.upsert(
                 sync_id=sync_run.id,
                 status=SyncStatus.FAILED,
                 finished_at=datetime.now(timezone.utc),
@@ -125,6 +123,4 @@ class SynchronizationService:
                 describe=self._normalize_error(exc),
             )
 
-            failed = await self.local.session.get(type(sync_run), sync_run.id)
-
-            return SyncRunSchema.model_validate(failed)
+            return failed

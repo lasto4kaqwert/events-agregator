@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+import uuid
+from typing import TYPE_CHECKING
+
+from app.schemas.ticket import (
+    ExternalAPIDeleteTicketSchema, 
+    DeletedTicketSchema,
+)
+
+from app.core.exceptions import TicketNotFoundError
+
+if TYPE_CHECKING:
+    from app.clients.events_provider_client import EventsProviderClient
+    from app.repositories.ticket_repository import TicketRepository
+
+
+class UnregisterTicketUseCase:
+    def __init__(
+        self,
+        repo: "TicketRepository",
+        client: "EventsProviderClient",
+    ) -> None:
+        self.repo = repo
+        self.client = client
+
+    async def do(
+        self,
+        ticket_id: uuid.UUID
+    ) -> DeletedTicketSchema:
+        ticket = await self.repo.get(ticket_id=ticket_id)
+
+        success = await self.client.unregister(
+            event_id=ticket.event_id,
+            payload=ExternalAPIDeleteTicketSchema(
+                ticket_id=ticket_id,
+            )
+        )
+
+        if success.success is True:
+            await self.repo.delete(ticket_id=ticket_id)
+        else:
+            raise TicketNotFoundError(f"Ticket {ticket_id} not found")
+        
+        return success

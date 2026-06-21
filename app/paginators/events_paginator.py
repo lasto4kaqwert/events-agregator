@@ -6,16 +6,16 @@ from typing import AsyncIterator, TYPE_CHECKING
 from app.schemas.event import ExternalAPIEventDescribeSchema
 
 if TYPE_CHECKING:
-    from app.services.external_api_service import ExternalAPIService
+    from app.clients.events_provider_client import EventsProviderClient
 
 
 class EventsPaginator:
     def __init__(
         self,
-        external: ExternalAPIService,
+        client: EventsProviderClient,
         changed_at: date,
     ) -> None:
-        self.external = external
+        self.client = client
         self.changed_at = changed_at
 
     # def _url_to_https(
@@ -27,7 +27,7 @@ class EventsPaginator:
     #     return url.replace("http://", "https://")
 
     async def __aiter__(self) -> AsyncIterator[ExternalAPIEventDescribeSchema]:
-        page = await self.external._fetch_events(
+        page = await self.client._fetch_events(
             changed_at=self.changed_at,
         )
 
@@ -38,5 +38,5 @@ class EventsPaginator:
             if not page.next:
                 break
 
-            # page = await self.external._next_events(self._url_to_https(page.next))
-            page = await self.external._next_events(page.next)
+            # page = await self.client._next_events(self._url_to_https(page.next))
+            page = await self.client._next_events(page.next)
