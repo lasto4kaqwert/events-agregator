@@ -28,7 +28,7 @@ from app.usecases import (
 # CACHE
 ########################################
 
-seats_cache = SeatsCache(ttl_seconds=30)
+seats_cache = SeatsCache(total_seconds=30)
 
 
 def get_seats_cache() -> SeatsCache:

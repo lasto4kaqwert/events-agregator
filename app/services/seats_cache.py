@@ -13,7 +13,7 @@ class SeatsCache:
         self,
         event_id: uuid.UUID,
     ) -> list[str] | None:
-        cached = self._storage.get(event_id=event_id)
+        cached = self._storage.get(event_id)
 
         if cached is None:
             return None
