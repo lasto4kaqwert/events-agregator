@@ -1,20 +1,40 @@
 import uuid
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, StringConstraints
+
+
+NameStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=100,
+    ),
+]
+
+SeatStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=20,
+    ),
+]
 
 
 class ExternalAPICreateTicketSchema(BaseModel):
-    first_name: str
-    last_name: str
-    seat: str
+    first_name: NameStr
+    last_name: NameStr
+    seat: SeatStr
     email: EmailStr
 
 
 class LocalRepoCreateTicketSchema(BaseModel):
     event_id: uuid.UUID
-    first_name: str
-    last_name: str
-    seat: str
+    first_name: NameStr
+    last_name: NameStr
+    seat: SeatStr
     email: EmailStr
 
 
