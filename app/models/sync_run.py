@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -23,21 +23,21 @@ class SyncRun(Base):
     )
 
     describe: Mapped[str] = mapped_column(
-        String(255),
+        Text,
         nullable=True,
     )
 
     started_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=False,
     )
 
     finished_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
     )
 
     changed_at: Mapped[date] = mapped_column(
-        DateTime,
-        nullable=False,
+        DateTime(timezone=True),
+        nullable=True,
     )

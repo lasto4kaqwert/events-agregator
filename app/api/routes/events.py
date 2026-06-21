@@ -1,3 +1,4 @@
+import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends
@@ -33,7 +34,7 @@ async def get_events(
 
 @router.get("/{event_id}", response_model=LocalRepoEventDescribeSchema)
 async def get_event_by_id(
-    event_id: str,
+    event_id: uuid.UUID,
     service: AgregatorService = Depends(get_agregator_service),
 ) -> LocalRepoEventDescribeSchema:
     return await service.get_event_by_id(
@@ -43,7 +44,7 @@ async def get_event_by_id(
 
 @router.get("/{event_id}/seats", response_model=ExternalAPIAvaiableSeatsSchema)
 async def get_seats(
-    event_id: str,
+    event_id: uuid.UUID,
     service: AgregatorService = Depends(get_agregator_service),
 ) -> ExternalAPIAvaiableSeatsSchema:
     return await service.get_avaiable_seats(

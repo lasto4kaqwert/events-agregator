@@ -12,6 +12,8 @@ from app.schemas.ticket import (
     DeletedTicketSchema,
 )
 
+from app.core.exceptions import ExternalAPIError
+
 
 class ExternalAPIService:
     def __init__(
@@ -26,15 +28,22 @@ class ExternalAPIService:
 
     async def _fetch_events(
         self,
-        change_at: date,
+        changed_at: date,
     ) -> ExternalAPIEventsSchema:
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.base_url}/api/events/",
                 params={
-                    "change_at": change_at,
+                    "changed_at": changed_at.strftime("%Y-%m-%d"),
                 },
                 headers=self.headers,
+            )
+
+        if response.status_code >= 400:
+            raise ExternalAPIError(
+                f"Provider register failed: "
+                f"status={response.status_code}, "
+                f"body={response.text}"
             )
         
         response.raise_for_status()
@@ -51,24 +60,16 @@ class ExternalAPIService:
                 headers=self.headers,
             )
 
+        if response.status_code >= 400:
+            raise ExternalAPIError(
+                f"Provider register failed: "
+                f"status={response.status_code}, "
+                f"body={response.text}"
+            )
+
         response.raise_for_status()
 
         return ExternalAPIEventsSchema.model_validate(response.json())
-
-    async def events(
-        self,
-        change_at: date,
-    ):
-        page = await self._fetch_events(change_at)
-
-        while True:
-
-            yield (ExternalAPIEventsSchema.model_validate(page)).results
-
-            if not page["next"]:
-                break
-
-            page = await self._next_events(page["next"])
 
     async def seats(
         self,
@@ -80,6 +81,13 @@ class ExternalAPIService:
                 headers=self.headers,
             )
 
+        if response.status_code >= 400:
+            raise ExternalAPIError(
+                f"Provider register failed: "
+                f"status={response.status_code}, "
+                f"body={response.text}"
+            )
+
         response.raise_for_status()
 
         return ExternalAPIAvaiableSeatsSchema.model_validate(response.json())
@@ -88,12 +96,19 @@ class ExternalAPIService:
         self,
         event_id: UUID,
         payload: ExternalAPICreateTicketSchema,
-    ) -> DeletedTicketSchema:
+    ) -> CreatedTicketSchema:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{self.base_url}/api/events/{event_id}/register/",
                 headers=self.headers,
                 json=payload.model_dump(mode="json"),
+            )
+
+        if response.status_code >= 400:
+            raise ExternalAPIError(
+                f"Provider register failed: "
+                f"status={response.status_code}, "
+                f"body={response.text}"
             )
 
         response.raise_for_status()
@@ -106,10 +121,18 @@ class ExternalAPIService:
         payload: ExternalAPIDeleteTicketSchema,
     ) -> DeletedTicketSchema:
         async with httpx.AsyncClient() as client:
-            response = await client.delete(
+            response = await client.request(
+                "DELETE",
                 f"{self.base_url}/api/events/{event_id}/unregister/",
                 headers=self.headers,
                 json=payload.model_dump(mode="json"),
+            )
+
+        if response.status_code >= 400:
+            raise ExternalAPIError(
+                f"Provider register failed: "
+                f"status={response.status_code}, "
+                f"body={response.text}"
             )
 
         response.raise_for_status()

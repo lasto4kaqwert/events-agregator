@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 
 class ExternalAPICreateTicketSchema(BaseModel):
@@ -22,8 +22,12 @@ class ExternalAPIDeleteTicketSchema(BaseModel):
 
 
 class CreatedTicketSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     ticket_id: uuid.UUID
 
 
 class DeletedTicketSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     success: bool

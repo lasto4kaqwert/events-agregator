@@ -12,3 +12,7 @@ class TicketNotFoundError(Exception):
 
 class SynchronizationNotFoundError(Exception):
     pass
+
+
+class ExternalAPIError(Exception):
+    pass

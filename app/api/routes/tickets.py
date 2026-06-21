@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends
 
 from app.services.agregator_service import AgregatorService
@@ -34,7 +35,7 @@ async def create_ticket(
 
 @router.delete("/{ticket_id}", response_model=DeletedTicketSchema)
 async def delete_ticket(
-    ticket_id: int,
+    ticket_id: uuid.UUID,
     service: AgregatorService = Depends(get_agregator_service),
 ) -> DeletedTicketSchema:
     return await service.delete_ticket(

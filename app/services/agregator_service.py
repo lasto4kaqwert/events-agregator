@@ -75,11 +75,11 @@ class AgregatorService:
     ) -> LocalRepoAvaiableSeatsSchema:
         await self.get_event_by_id(event_id=event_id)
 
-        seats_result = self.external.seats(event_id=event_id)
+        seats_result = await self.external.seats(event_id=event_id)
 
         return LocalRepoAvaiableSeatsSchema(
             event_id=event_id,
-            seats=seats_result["seats"],
+            seats=seats_result.seats,
         )
     
     async def create_ticket(
@@ -92,8 +92,11 @@ class AgregatorService:
         if payload.seat not in avaiable_seats.seats:
             raise SeatIsNotAvaiableError(f"Seat {payload.seat} is not avaiable for {event_id}")
         
-        ticket = await self.external.register(payload=payload)
-        if ticket.get("ticket_id"):
+        ticket = await self.external.register(
+            event_id=event_id,
+            payload=payload,
+        )
+        if ticket.ticket_id:
             await self.local.create_ticket(
                 event_id=event_id,
                 ticket_id=ticket.ticket_id,
@@ -128,7 +131,7 @@ class AgregatorService:
     async def get_last_sync(
         self,
     ) -> SyncRunSchema:
-        sync = self.local.get_last_sync_run()
+        sync = await self.local.get_last_sync_run()
 
         if not sync:
             raise SynchronizationNotFoundError(f"Sync not found")
@@ -139,7 +142,7 @@ class AgregatorService:
         self,
         sync_id: uuid.UUID,
     ) -> SyncRunSchema:
-        sync = self.local.get_sync_run_by_id(sync_id=sync_id)
+        sync = await self.local.get_sync_run_by_id(sync_id=sync_id)
 
         if not sync:
             raise SynchronizationNotFoundError(f"Sync with id: {sync_id} not found")
@@ -149,11 +152,11 @@ class AgregatorService:
     async def run_sync(
         self,
     ) -> SyncRunSchema:
-        sync = self.sync.sync_events(
+        sync = await self.sync.sync_events(
             changed_at_init=datetime(
-                os.environ.get("SYNC_INIT_YEAR"),
-                os.environ.get("SYNC_INIT_MONTH"),
-                os.environ.get("SYNC_INIT_DAY"),
+                int(os.environ.get("SYNC_INIT_YEAR", "2000")),
+                int(os.environ.get("SYNC_INIT_MONTH", "1")),
+                int(os.environ.get("SYNC_INIT_DAY", "1")),
             )
         )
 

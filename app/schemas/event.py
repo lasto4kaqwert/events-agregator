@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 class ExternalAPIPlaceDescribeSchema(BaseModel):
     id: uuid.UUID
@@ -49,7 +49,7 @@ class ExternalAPIEventsSchema(BaseModel):
     results: list[ExternalAPIEventDescribeSchema]
 
 class LocalRepoEventsSchema(BaseModel):
-    count: int = Field(gt=0)
+    count: int
     next: str | None = None
     previous: str | None = None
     results: list[LocalRepoEventDescribeSchema]

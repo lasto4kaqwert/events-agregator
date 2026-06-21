@@ -13,14 +13,6 @@ router = APIRouter(
 )
 
 
-@router.get("/{sync_id}", response_model=SyncRunSchema)
-async def get_sync_by_id(
-    sync_id: uuid.UUID,
-    service: AgregatorService = Depends(get_agregator_service),
-) -> SyncRunSchema:
-    return await service.get_sync_by_id(sync_id=sync_id)
-
-
 @router.get("/last", response_model=SyncRunSchema)
 async def get_last_syn(
     service: AgregatorService = Depends(get_agregator_service),
@@ -33,3 +25,11 @@ async def run_sync(
     service: AgregatorService = Depends(get_agregator_service),
 ) -> SyncRunSchema:
     return await service.run_sync()
+
+
+@router.get("/{sync_id}", response_model=SyncRunSchema)
+async def get_sync_by_id(
+    sync_id: uuid.UUID,
+    service: AgregatorService = Depends(get_agregator_service),
+) -> SyncRunSchema:
+    return await service.get_sync_by_id(sync_id=sync_id)

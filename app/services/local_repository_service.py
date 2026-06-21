@@ -1,5 +1,4 @@
 import uuid
-import json
 from datetime import datetime, timezone
 
 from fastapi import Depends
@@ -39,7 +38,7 @@ class LocalRepositoryService:
         return LocalRepoEventDescribeSchema(
             id=event.id,
             name=event.name,
-            place=LocalRepoPlaceDescribeSchema.model_validate(json.loads(event.place)),
+            place=LocalRepoPlaceDescribeSchema.model_validate(event.place),
             event_time=event.event_time,
             registration_deadline=event.registration_deadline,
             status=event.status,
@@ -59,30 +58,35 @@ class LocalRepositoryService:
 
     async def get_last_sync_run(
         self,
+        status: SyncStatus | None = None,
+        raise_if_empty: bool = True,
     ) -> SyncRunSchema:
-        stmt = (
-            select(SyncRun)
-            .order_by(desc(SyncRun.started_at))
-            .limit(1)
-        )
+        stmt = select(SyncRun)
+
+        if status is not None:
+            stmt = stmt.where(SyncRun.status == status.value)
+
+        stmt = stmt.order_by(desc(SyncRun.started_at)).limit(1)
 
         result = await self.session.execute(stmt)
-        sync_run = result.scalar_one()
+        sync_run = result.scalar_one_or_none()
 
         if not sync_run:
-            raise SynchronizationNotFoundError(f"Not found any sync run")
-        
+            if raise_if_empty:
+                raise SynchronizationNotFoundError("Sync run not found")
+            return None
+
         return SyncRunSchema.model_validate(sync_run)
 
     async def create_sync_run(
         self,
-        status: str,
+        status: SyncStatus,
         started_at: datetime,
         finished_at: datetime | None = None,
         changed_at: datetime | None = None,
-        details: str | None = None,
-    ) -> SyncRunSchema:
-        sync_id = uuid.uuid4
+        describe: str | None = None,
+    ) -> SyncRun:
+        sync_id = uuid.uuid4()
 
         sync_run = SyncRun(
             id=sync_id,
@@ -90,19 +94,14 @@ class LocalRepositoryService:
             started_at=started_at,
             finished_at=finished_at,
             changed_at=changed_at,
-            details=details,
+            describe=describe,
         )
 
         self.session.add(sync_run)
         await self.session.commit()
         await self.session.refresh(sync_run)
 
-        return SyncRunSchema(
-            id=sync_id,
-            started_at=started_at,
-            finished_at=finished_at,
-            changed_at=changed_at,
-        )
+        return sync_run
 
     async def update_sync_run(
         self,
@@ -110,8 +109,8 @@ class LocalRepositoryService:
         status: SyncStatus | None,
         finished_at: datetime | None,
         changed_at: datetime | None,
-        details: str | None = None,
-    ) -> SyncRunSchema:
+        describe: str | None = None,
+    ) -> SyncRun:
         sync_run = await self.session.get(SyncRun, sync_id)
 
         if not sync_run:
@@ -120,17 +119,12 @@ class LocalRepositoryService:
         sync_run.status = status
         sync_run.finished_at = finished_at
         sync_run.changed_at = changed_at
-        sync_run.describe = details
+        sync_run.describe = describe
 
         await self.session.commit()
         await self.session.refresh(sync_run)
 
-        return SyncRunSchema(
-            id=sync_id,
-            started_at=sync_run.started_at,
-            finished_at=finished_at,
-            changed_at=changed_at,
-        )
+        return sync_run
 
     async def get_events(
         self,
@@ -138,7 +132,7 @@ class LocalRepositoryService:
         page: int,
         page_size: int,
     ) -> LocalRepoEventsSchema:
-        offset = (page - 1) * 20
+        offset = (page - 1) * page_size
 
         stmt = select(Event)
         if date_from is not None:
@@ -168,9 +162,11 @@ class LocalRepositoryService:
         self,
         event_id: uuid.UUID,
     ) -> LocalRepoEventDescribeSchema:
-        event = await self.session.get(Event, event_id)
+        stmt = select(Event).where(Event.id == event_id)
+        result = await self.session.execute(stmt)
+        event = result.scalar_one_or_none()
 
-        if not Event:
+        if not event:
             raise EventNotFoundError(f"Event with id: {event_id} not found")
         
         return self._map_event_to_schema(event)
@@ -179,7 +175,6 @@ class LocalRepositoryService:
         self,
         events: list[LocalRepoEventDescribeSchema],
     ) -> int:
-        now = datetime.now(timezone.utc)
         saved_count = 0
 
         for event_describe in events:
@@ -190,7 +185,7 @@ class LocalRepositoryService:
                 event = Event(id=event_id)
                 self.session.add(event)
 
-            event.place = event_describe.place.model_dump()
+            event.place = event_describe.place.model_dump(mode="json")
             event.name = event_describe.name
             event.event_time = event_describe.event_time
             event.registration_deadline = event_describe.registration_deadline
