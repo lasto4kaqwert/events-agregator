@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
@@ -48,3 +49,11 @@ async def sync_not_found_handler(
     exc: SynchronizationNotFoundError,
 ):
     return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    _: Request,
+    exc: RequestValidationError,
+):
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
