@@ -11,6 +11,8 @@ from app.repositories.event_repository import EventRepository
 from app.repositories.sync_repository import SyncRepository
 from app.repositories.ticket_repository import TicketRepository
 
+from app.services.seats_cache import SeatsCache
+
 from app.usecases import (
     GetSyncUseCase,
     LastSyncUseCase,
@@ -22,6 +24,15 @@ from app.usecases import (
     GetSeatsUseCase,
 )
 
+########################################
+# CACHE
+########################################
+
+seats_cache = SeatsCache(ttl_seconds=30)
+
+
+def get_seats_cache() -> SeatsCache:
+    return seats_cache
 
 ########################################
 # SYNCS
@@ -68,6 +79,7 @@ async def get_register_ticket_usecase(
             api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
             base_url=os.getenv("EVENT_PROVIDER_HOST"),
         ),
+        cache=get_seats_cache(),
     )
 
 
@@ -80,6 +92,7 @@ async def get_unregister_ticket_usecase(
             api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
             base_url=os.getenv("EVENT_PROVIDER_HOST"),
         ),
+        cache=get_seats_cache(),
     )
 
 ########################################
@@ -111,4 +124,5 @@ async def get_getter_seats_usecase(
             api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
             base_url=os.getenv("EVENT_PROVIDER_HOST"),
         ),
+        cache=get_seats_cache(),
     )
