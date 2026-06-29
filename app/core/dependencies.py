@@ -1,10 +1,10 @@
-import os
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.events_provider_client import EventsProviderClient
 from app.core.session import get_session
+from app.core.settings import get_settings
 from app.repositories.event_repository import EventRepository
 from app.repositories.sync_repository import SyncRepository
 from app.repositories.ticket_repository import TicketRepository
@@ -19,6 +19,8 @@ from app.usecases import (
     TriggerSyncUseCase,
     UnregisterTicketUseCase,
 )
+
+settings = get_settings()
 
 ########################################
 # CACHE
@@ -60,8 +62,8 @@ async def get_trigger_sync_usecase(
         sync_repo=SyncRepository(session=session),
         event_repo=EventRepository(session=session),
         client=EventsProviderClient(
-            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
-            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+            api_key=settings.event_provider_api_key,
+            base_url=settings.event_provider_host,
         ),
     )
 
@@ -73,8 +75,8 @@ async def build_trigger_sync_usecase(
         sync_repo=SyncRepository(session=session),
         event_repo=EventRepository(session=session),
         client=EventsProviderClient(
-            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
-            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+            api_key=settings.event_provider_api_key,
+            base_url=settings.event_provider_host,
         ),
     )
 
@@ -89,8 +91,8 @@ async def get_register_ticket_usecase(
     return RegisterTicketUseCase(
         repo=TicketRepository(session=session),
         client=EventsProviderClient(
-            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
-            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+            api_key=settings.event_provider_api_key,
+            base_url=settings.event_provider_host,
         ),
         cache=get_seats_cache(),
     )
@@ -102,8 +104,8 @@ async def get_unregister_ticket_usecase(
     return UnregisterTicketUseCase(
         repo=TicketRepository(session=session),
         client=EventsProviderClient(
-            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
-            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+            api_key=settings.event_provider_api_key,
+            base_url=settings.event_provider_host,
         ),
         cache=get_seats_cache(),
     )
@@ -136,8 +138,8 @@ async def get_getter_seats_usecase(
     return GetSeatsUseCase(
         repo=EventRepository(session=session),
         client=EventsProviderClient(
-            api_key=os.getenv("EVENT_PROVIDER_API_KEY"),
-            base_url=os.getenv("EVENT_PROVIDER_HOST"),
+            api_key=settings.event_provider_api_key,
+            base_url=settings.event_provider_host,
         ),
         cache=get_seats_cache(),
     )

@@ -1,9 +1,9 @@
-import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.core.settings import get_settings
 from app.models.base import Base
 from app.models.event import Event  # noqa: F401
 from app.models.sync_run import SyncRun  # noqa: F401
@@ -13,6 +13,8 @@ from app.models.ticket import Ticket  # noqa: F401
 # access to the values within the .ini file in use.
 config = context.config
 
+settings = get_settings()
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
@@ -20,9 +22,7 @@ if config.config_file_name is not None:
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.environ.get("POSTGRES_CONNECTION_STRING").replace(
-        "postgres://", "postgresql://"
-    ),
+    settings.alembic_postgres_connection_string,
 )
 
 # add your model's MetaData object here

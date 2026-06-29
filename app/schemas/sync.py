@@ -1,14 +1,9 @@
 import uuid
 from datetime import datetime
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
-
-class SyncStatus(StrEnum):
-    RUNNING = "running"
-    SUCCESS = "success"
-    FAILED = "failed"
+from app.core.enums import SyncStatus
 
 
 class SyncRunSchema(BaseModel):

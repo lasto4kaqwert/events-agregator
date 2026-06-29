@@ -1,10 +1,11 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, Enum, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.enums import EventStatus
 from app.models.base import Base
 
 
@@ -36,10 +37,14 @@ class Event(Base):
         nullable=False,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(255),
+    status: Mapped[EventStatus] = mapped_column(
+        Enum(
+            EventStatus,
+            values_callable=lambda enum: [item.value for item in enum],
+            native_enum=False,
+        ),
         nullable=False,
-        default="new",
+        default=EventStatus.NEW,
     )
 
     number_of_visitors: Mapped[int] = mapped_column(

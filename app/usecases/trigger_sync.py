@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import logging
-import os
 import sys
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
 
+from app.core.enums import SyncStatus
+from app.core.settings import get_settings
 from app.schemas.event import ExternalAPIEventDescribeSchema
-from app.schemas.sync import SyncRunSchema, SyncStatus
+from app.schemas.sync import SyncRunSchema
 
 if TYPE_CHECKING:
     from app.clients.events_provider_client import EventsProviderClient
@@ -57,10 +58,12 @@ class TriggerSyncUseCase:
         if changed_at_init:
             return changed_at_init
 
+        settings = get_settings()
+
         return date(
-            int(os.environ.get("SYNC_INIT_YEAR", "2000")),
-            int(os.environ.get("SYNC_INIT_MONTH", "1")),
-            int(os.environ.get("SYNC_INIT_DAY", "1")),
+            int(settings.sync_init_year),
+            int(settings.sync_init_month),
+            int(settings.sync_init_day),
         )
 
     def _extract_changed_at(self, dt: datetime | None) -> datetime | None:
@@ -76,11 +79,11 @@ class TriggerSyncUseCase:
         self,
         changed_at_init: date | None = None,
     ) -> SyncRunSchema:
-        logger.info(f"Events sync started: {datetime.now(timezone.utc)}")
+        logger.info("Events sync started: %s", datetime.now(timezone.utc))
 
         sync_run = await self.sync_repo.upsert()
 
-        logger.info(f"Sync run created: {sync_run.id}")
+        logger.info("Sync run created: %s", sync_run.id)
 
         latest_changed_at: datetime | None = None
 
@@ -96,11 +99,11 @@ class TriggerSyncUseCase:
                     last_success_sync.changed_at
                 )
 
-                logger.info(f"Incremental sync started from {changed_at}")
+                logger.info("Incremental sync started from %s", changed_at)
             else:
                 changed_at = self._get_init_date(changed_at_init)
 
-                logger.info(f"Initial sync started from {changed_at}")
+                logger.info("Initial sync started from %s", changed_at)
 
             batch: list[ExternalAPIEventDescribeSchema] = []
 
@@ -118,12 +121,12 @@ class TriggerSyncUseCase:
                     await self.event_repo.upsert(batch)
                     batch.clear()
 
-                    logger.info(f"Events batch saved: {len(batch)}")
+                    logger.info("Events batch saved: %s", len(batch))
 
             if batch:
                 await self.event_repo.upsert(batch)
 
-                logger.info(f"Events final batch saved: {len(batch)}")
+                logger.info("Events final batch saved: %s", len(batch))
 
             updated = await self.sync_repo.upsert(
                 sync_id=sync_run.id,
@@ -134,14 +137,19 @@ class TriggerSyncUseCase:
             )
 
             logger.info(
-                f"Events sync finished successfully: {sync_run.id}, {latest_changed_at}"
+                "Events sync finished successfully: %s, %s",
+                sync_run.id,
+                latest_changed_at,
             )
 
             return SyncRunSchema.model_validate(updated)
 
         except Exception as exc:
             logger.exception(
-                f"Events sync failed: {sync_run.id}, {last_success_sync}, {str(exc)}"
+                "Events sync failed: %s, %s, %s",
+                sync_run.id,
+                last_success_sync,
+                str(exc),
             )
 
             failed = await self.sync_repo.upsert(

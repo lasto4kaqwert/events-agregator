@@ -1,4 +1,3 @@
-import os
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -7,10 +6,13 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
+from app.core.settings import get_settings
+
+settings = get_settings()
+
+
 engine = create_async_engine(
-    os.environ.get("POSTGRES_CONNECTION_STRING").replace(
-        "postgres://", "postgresql+asyncpg://"
-    ),
+    settings.async_engine_connection_string,
     poolclass=NullPool,
     echo=False,
 )

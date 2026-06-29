@@ -15,8 +15,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-print("EVENTS SYNC WORKER MODULE STARTED", flush=True)
-
 async def run_once() -> None:
     async with async_session_factory() as session:
         usecase = await build_trigger_sync_usecase(session=session)

@@ -4,9 +4,10 @@ from datetime import datetime, timezone
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.enums import SyncStatus
 from app.core.exceptions import SynchronizationNotFoundError
 from app.models.sync_run import SyncRun
-from app.schemas.sync import SyncRunSchema, SyncStatus
+from app.schemas.sync import SyncRunSchema
 
 
 class SyncRepository:

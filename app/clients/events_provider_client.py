@@ -1,5 +1,6 @@
 from datetime import date
 from typing import AsyncIterator
+from urllib.parse import urljoin
 from uuid import UUID
 
 import httpx
@@ -27,6 +28,12 @@ class EventsProviderClient:
             "x-api-key": api_key,
         }
 
+    def _build_url(
+        self,
+        path: str,
+    ) -> str:
+        return urljoin(self.base_url, path.lstrip("/"))
+
     def iter_events(
         self,
         changed_at: date,
@@ -42,7 +49,7 @@ class EventsProviderClient:
     ) -> ExternalAPIEventsSchema:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/api/events/",
+                self._build_url("/api/events/"),
                 params={
                     "changed_at": changed_at.strftime("%Y-%m-%d"),
                 },
@@ -56,6 +63,7 @@ class EventsProviderClient:
                 f"body={response.text}"
             )
 
+        print(response)
         return ExternalAPIEventsSchema.model_validate(response.json())
 
     async def next_events(
@@ -83,7 +91,7 @@ class EventsProviderClient:
     ) -> ExternalAPIAvaiableSeatsSchema:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/api/events/{event_id}/seats/",
+                self._build_url(f"/api/events/{event_id}/seats/"),
                 headers=self.headers,
             )
 
@@ -103,7 +111,7 @@ class EventsProviderClient:
     ) -> CreatedTicketSchema:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{self.base_url}/api/events/{event_id}/register/",
+                self._build_url(f"/api/events/{event_id}/register/"),
                 headers=self.headers,
                 json=payload.model_dump(mode="json"),
             )
@@ -125,7 +133,7 @@ class EventsProviderClient:
         async with httpx.AsyncClient() as client:
             response = await client.request(
                 "DELETE",
-                f"{self.base_url}/api/events/{event_id}/unregister/",
+                self._build_url(f"/api/events/{event_id}/unregister/"),
                 headers=self.headers,
                 json=payload.model_dump(mode="json"),
             )

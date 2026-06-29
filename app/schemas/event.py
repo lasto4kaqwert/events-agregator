@@ -3,6 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.core.enums import EventStatus
+
 
 class ExternalAPIPlaceDescribeSchema(BaseModel):
     id: uuid.UUID
@@ -28,7 +30,7 @@ class ExternalAPIEventDescribeSchema(BaseModel):
     place: ExternalAPIPlaceDescribeSchema
     event_time: datetime
     registration_deadline: datetime
-    status: str
+    status: EventStatus
     number_of_visitors: int
     changed_at: datetime
     created_at: datetime
@@ -41,7 +43,7 @@ class LocalRepoEventDescribeSchema(BaseModel):
     place: LocalRepoPlaceDescribeSchema
     event_time: datetime
     registration_deadline: datetime
-    status: str
+    status: EventStatus
     number_of_visitors: int
 
 

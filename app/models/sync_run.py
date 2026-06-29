@@ -1,10 +1,11 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, Enum, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.enums import SyncStatus
 from app.models.base import Base
 
 
@@ -17,8 +18,12 @@ class SyncRun(Base):
         default=uuid.uuid4,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(32),
+    status: Mapped[SyncStatus] = mapped_column(
+        Enum(
+            SyncStatus,
+            values_callable=lambda enum: [item.value for item in enum],
+            native_enum=False,
+        ),
         nullable=False,
     )
 
