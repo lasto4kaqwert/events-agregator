@@ -1,8 +1,8 @@
 
+from datetime import date
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from datetime import date
 
 from app.clients.events_provider_client import EventsProviderClient
 from app.core.session import get_session

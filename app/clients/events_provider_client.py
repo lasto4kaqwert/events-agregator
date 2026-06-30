@@ -5,11 +5,9 @@ from uuid import UUID
 
 import httpx
 
-from app.paginators.events_paginator import EventsPaginator
-
-from app.core.exceptions import ExternalAPIError
 from app.core.enums import EventProviderClientType
-
+from app.core.exceptions import ExternalAPIError
+from app.paginators.events_paginator import EventsPaginator
 from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
 from app.schemas.ticket import (
@@ -38,7 +36,7 @@ class EventsProviderClient:
         path: str,
     ) -> str:
         return urljoin(self.base_url, path.lstrip("/"))
-    
+
     def _url_http_to_https(self, url: str | None) -> str | None:
         if not url:
             return None

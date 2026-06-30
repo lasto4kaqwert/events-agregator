@@ -18,7 +18,7 @@ class EventsPaginator:
         self.client = client
         self.changed_at = changed_at
 
-    
+
 
     async def __aiter__(self) -> AsyncIterator[ExternalAPIEventDescribeSchema]:
         page = await self.client.fetch_events(
