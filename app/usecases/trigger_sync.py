@@ -6,7 +6,6 @@ from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING
 
 from app.core.enums import SyncStatus
-from app.core.settings import get_settings
 from app.schemas.event import ExternalAPIEventDescribeSchema
 from app.schemas.sync import SyncRunSchema
 
@@ -32,10 +31,12 @@ class TriggerSyncUseCase:
         sync_repo: "SyncRepository",
         event_repo: "EventRepository",
         client: "EventsProviderClient",
+        init_date: date,
     ) -> None:
         self.sync_repo = sync_repo
         self.event_repo = event_repo
         self.client = client
+        self.init_date = init_date
 
     def _normalize_error(self, error: Exception) -> str:
         msg = str(error)
@@ -53,18 +54,6 @@ class TriggerSyncUseCase:
         if right is None:
             return left
         return max(left, right)
-
-    def _get_init_date(self, changed_at_init: date | None) -> date:
-        if changed_at_init:
-            return changed_at_init
-
-        settings = get_settings()
-
-        return date(
-            int(settings.sync_init_year),
-            int(settings.sync_init_month),
-            int(settings.sync_init_day),
-        )
 
     def _extract_changed_at(self, dt: datetime | None) -> datetime | None:
         if dt is None:
@@ -101,7 +90,7 @@ class TriggerSyncUseCase:
 
                 logger.info("Incremental sync started from %s", changed_at)
             else:
-                changed_at = self._get_init_date(changed_at_init)
+                changed_at = changed_at_init or self.init_date
 
                 logger.info("Initial sync started from %s", changed_at)
 

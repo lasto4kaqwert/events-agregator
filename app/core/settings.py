@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.enums import EventProviderClientType
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -26,7 +28,7 @@ class Settings(BaseSettings):
     sync_init_month: int
     sync_init_day: int
 
-    env_client_type: str
+    env_client_type: EventProviderClientType = EventProviderClientType.HTTP
 
     @property
     def async_engine_connection_string(

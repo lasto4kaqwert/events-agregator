@@ -12,3 +12,8 @@ class EventStatus(str, Enum):
     PUBLISHED = "published"
     FINISHED = "finished"
     CLOSED = "registration_closed"
+
+
+class EventProviderClientType(str, Enum):
+    HTTP = "http"
+    HTTPS = "https"

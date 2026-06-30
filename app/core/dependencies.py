@@ -2,6 +2,8 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from datetime import date
+
 from app.clients.events_provider_client import EventsProviderClient
 from app.core.session import get_session
 from app.core.settings import get_settings
@@ -20,8 +22,6 @@ from app.usecases import (
     UnregisterTicketUseCase,
 )
 
-settings = get_settings()
-
 ########################################
 # CACHE
 ########################################
@@ -32,7 +32,18 @@ seats_cache = SeatsCache(total_seconds=30)
 def get_seats_cache() -> SeatsCache:
     return seats_cache
 
+########################################
+# SYNCS
+########################################
 
+settings = get_settings()
+
+def get_client() -> EventsProviderClient:
+    return EventsProviderClient(
+        api_key=settings.event_provider_api_key,
+        base_url=settings.event_provider_host,
+        env_client_type=settings.env_client_type,
+    )
 
 ########################################
 # SYNCS
@@ -61,10 +72,7 @@ async def get_trigger_sync_usecase(
     return TriggerSyncUseCase(
         sync_repo=SyncRepository(session=session),
         event_repo=EventRepository(session=session),
-        client=EventsProviderClient(
-            api_key=settings.event_provider_api_key,
-            base_url=settings.event_provider_host,
-        ),
+        client=get_client(),
     )
 
 
@@ -74,9 +82,11 @@ async def build_trigger_sync_usecase(
     return TriggerSyncUseCase(
         sync_repo=SyncRepository(session=session),
         event_repo=EventRepository(session=session),
-        client=EventsProviderClient(
-            api_key=settings.event_provider_api_key,
-            base_url=settings.event_provider_host,
+        client=get_client(),
+        init_date=date(
+            int(settings.sync_init_year),
+            int(settings.sync_init_month),
+            int(settings.sync_init_day),
         ),
     )
 
@@ -90,10 +100,7 @@ async def get_register_ticket_usecase(
 ) -> RegisterTicketUseCase:
     return RegisterTicketUseCase(
         repo=TicketRepository(session=session),
-        client=EventsProviderClient(
-            api_key=settings.event_provider_api_key,
-            base_url=settings.event_provider_host,
-        ),
+        client=get_client(),
         cache=get_seats_cache(),
     )
 
@@ -103,10 +110,7 @@ async def get_unregister_ticket_usecase(
 ) -> UnregisterTicketUseCase:
     return UnregisterTicketUseCase(
         repo=TicketRepository(session=session),
-        client=EventsProviderClient(
-            api_key=settings.event_provider_api_key,
-            base_url=settings.event_provider_host,
-        ),
+        client=get_client(),
         cache=get_seats_cache(),
     )
 
@@ -137,9 +141,6 @@ async def get_getter_seats_usecase(
 ) -> GetSeatsUseCase:
     return GetSeatsUseCase(
         repo=EventRepository(session=session),
-        client=EventsProviderClient(
-            api_key=settings.event_provider_api_key,
-            base_url=settings.event_provider_host,
-        ),
+        client=get_client(),
         cache=get_seats_cache(),
     )

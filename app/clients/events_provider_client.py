@@ -5,8 +5,11 @@ from uuid import UUID
 
 import httpx
 
-from app.core.exceptions import ExternalAPIError
 from app.paginators.events_paginator import EventsPaginator
+
+from app.core.exceptions import ExternalAPIError
+from app.core.enums import EventProviderClientType
+
 from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
 from app.schemas.ticket import (
@@ -22,17 +25,24 @@ class EventsProviderClient:
         self,
         base_url: str,
         api_key: str,
+        env_client_type: str = "HTTP",
     ) -> None:
         self.base_url = base_url
         self.headers = {
             "x-api-key": api_key,
         }
+        self.env_client_type = env_client_type
 
     def _build_url(
         self,
         path: str,
     ) -> str:
         return urljoin(self.base_url, path.lstrip("/"))
+    
+    def _url_http_to_https(self, url: str | None) -> str | None:
+        if not url:
+            return None
+        return url.replace("http://", "https://")
 
     def iter_events(
         self,
@@ -63,7 +73,6 @@ class EventsProviderClient:
                 f"body={response.text}"
             )
 
-        print(response)
         return ExternalAPIEventsSchema.model_validate(response.json())
 
     async def next_events(
@@ -71,6 +80,9 @@ class EventsProviderClient:
         next: str,
     ) -> ExternalAPIEventsSchema:
         async with httpx.AsyncClient() as client:
+            if self.env_client_type is EventProviderClientType.HTTPS:
+                next = self._url_http_to_https(next)
+
             response = await client.get(
                 next,
                 headers=self.headers,
