@@ -10,15 +10,15 @@ from app.core.dependencies import (
     get_unregister_ticket_usecase,
 )
 from app.schemas.ticket import (
-    CreatedTicketSchema,
-    DeletedTicketSchema,
-    ExternalAPICreateTicketSchema,
-    LocalRepoCreateTicketSchema,
+    InRouteRegisterTicketSchema,
+    RegisteredTicketSchema,
+    RegisterTicketSchema,
+    UnregisteredTicketSchema,
 )
 
 if TYPE_CHECKING:
     from app.usecases import (
-        RegisterTicketUseCase,
+        RegisterTicketUsecase,
         UnregisterTicketUseCase,
     )
 
@@ -28,14 +28,14 @@ router = APIRouter(
 )
 
 
-@router.post("", response_model=CreatedTicketSchema, status_code=201)
+@router.post("", response_model=RegisteredTicketSchema, status_code=201)
 async def create_ticket(
-    payload: LocalRepoCreateTicketSchema,
-    usecase: RegisterTicketUseCase = Depends(get_register_ticket_usecase),
-) -> CreatedTicketSchema:
+    payload: InRouteRegisterTicketSchema,
+    usecase: RegisterTicketUsecase = Depends(get_register_ticket_usecase),
+) -> RegisteredTicketSchema:
     return await usecase.do(
         event_id=payload.event_id,
-        payload=ExternalAPICreateTicketSchema(
+        payload=RegisterTicketSchema(
             first_name=payload.first_name,
             last_name=payload.last_name,
             seat=payload.seat,
@@ -44,11 +44,11 @@ async def create_ticket(
     )
 
 
-@router.delete("/{ticket_id}", response_model=DeletedTicketSchema)
+@router.delete("/{ticket_id}", response_model=UnregisteredTicketSchema)
 async def delete_ticket(
     ticket_id: uuid.UUID,
     usecase: UnregisterTicketUseCase = Depends(get_unregister_ticket_usecase),
-) -> DeletedTicketSchema:
+) -> UnregisteredTicketSchema:
     return await usecase.do(
         ticket_id=ticket_id,
     )

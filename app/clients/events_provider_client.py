@@ -11,10 +11,10 @@ from app.paginators.events_paginator import EventsPaginator
 from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
 from app.schemas.ticket import (
-    CreatedTicketSchema,
-    DeletedTicketSchema,
-    ExternalAPICreateTicketSchema,
-    ExternalAPIDeleteTicketSchema,
+    RegisteredTicketSchema,
+    RegisterTicketSchema,
+    UnregisteredTicketSchema,
+    UnregisterTicketSchema,
 )
 
 
@@ -117,8 +117,8 @@ class EventsProviderClient:
     async def register(
         self,
         event_id: UUID,
-        payload: ExternalAPICreateTicketSchema,
-    ) -> CreatedTicketSchema:
+        payload: RegisterTicketSchema,
+    ) -> RegisteredTicketSchema:
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 self._build_url(f"/api/events/{event_id}/register/"),
@@ -133,13 +133,13 @@ class EventsProviderClient:
                 f"body={response.text}"
             )
 
-        return CreatedTicketSchema.model_validate(response.json())
+        return RegisteredTicketSchema.model_validate(response.json())
 
     async def unregister(
         self,
         event_id: UUID,
-        payload: ExternalAPIDeleteTicketSchema,
-    ) -> DeletedTicketSchema:
+        payload: UnregisterTicketSchema,
+    ) -> UnregisteredTicketSchema:
         async with httpx.AsyncClient() as client:
             response = await client.request(
                 "DELETE",
@@ -155,4 +155,4 @@ class EventsProviderClient:
                 f"body={response.text}"
             )
 
-        return DeletedTicketSchema.model_validate(response.json())
+        return UnregisteredTicketSchema.model_validate(response.json())

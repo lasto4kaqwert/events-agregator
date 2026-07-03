@@ -9,15 +9,24 @@ from app.core.session import get_session
 from app.core.settings import get_settings
 from app.repositories.event_repository import EventRepository
 from app.repositories.sync_repository import SyncRepository
-from app.repositories.ticket_repository import TicketRepository
-from app.services.seats_cache import SeatsCache
+from app.services import (
+    SeatsCache,
+    TicketService,
+)
+from app.services.repositories import (
+    OutboxRepository,
+    TicketRepository,
+)
+from app.services.workers import (
+    TicketOutboxProcessor,
+)
 from app.usecases import (
     GetEventsUseCase,
     GetEventUseCase,
     GetSeatsUseCase,
     GetSyncUseCase,
     LastSyncUseCase,
-    RegisterTicketUseCase,
+    RegisterTicketUsecase,
     TriggerSyncUseCase,
     UnregisterTicketUseCase,
 )
@@ -38,6 +47,7 @@ def get_seats_cache() -> SeatsCache:
 
 settings = get_settings()
 
+
 def get_client() -> EventsProviderClient:
     return EventsProviderClient(
         api_key=settings.event_provider_api_key,
@@ -48,6 +58,21 @@ def get_client() -> EventsProviderClient:
 ########################################
 # SYNCS
 ########################################
+
+
+async def build_trigger_sync_usecase(
+    session: AsyncSession,
+) -> TriggerSyncUseCase:
+    return TriggerSyncUseCase(
+        sync_repo=SyncRepository(session=session),
+        event_repo=EventRepository(session=session),
+        client=get_client(),
+        init_date=date(
+            int(settings.sync_init_year),
+            int(settings.sync_init_month),
+            int(settings.sync_init_day),
+        ),
+    )
 
 
 async def get_getter_sync_usesace(
@@ -69,38 +94,38 @@ async def get_last_sync_usecase(
 async def get_trigger_sync_usecase(
     session: AsyncSession = Depends(get_session),
 ) -> TriggerSyncUseCase:
-    return TriggerSyncUseCase(
-        sync_repo=SyncRepository(session=session),
-        event_repo=EventRepository(session=session),
-        client=get_client(),
-    )
-
-
-async def build_trigger_sync_usecase(
-    session: AsyncSession,
-) -> TriggerSyncUseCase:
-    return TriggerSyncUseCase(
-        sync_repo=SyncRepository(session=session),
-        event_repo=EventRepository(session=session),
-        client=get_client(),
-        init_date=date(
-            int(settings.sync_init_year),
-            int(settings.sync_init_month),
-            int(settings.sync_init_day),
-        ),
-    )
+    return await build_trigger_sync_usecase(session=session)
 
 ########################################
 # TICKETS
 ########################################
 
+def _get_ticket_service(
+    session: AsyncSession,
+) -> TicketService:
+    return TicketService(
+        session=session,
+        ticket_repo=TicketRepository(session=session),
+        outbox_repo=OutboxRepository(session=session),
+    )
+
+
+async def build_ticket_outbox_processor(
+    session: AsyncSession,
+) -> TriggerSyncUseCase:
+    return TicketOutboxProcessor(
+        session=session,
+        client=get_client(),
+        service=_get_ticket_service(session=session),
+        outbox_repo=OutboxRepository(session=session),
+    )
+
 
 async def get_register_ticket_usecase(
     session: AsyncSession = Depends(get_session),
-) -> RegisterTicketUseCase:
-    return RegisterTicketUseCase(
-        repo=TicketRepository(session=session),
-        client=get_client(),
+) -> RegisterTicketUsecase:
+    return RegisterTicketUsecase(
+        service=_get_ticket_service(session=session),
         cache=get_seats_cache(),
     )
 
@@ -109,11 +134,9 @@ async def get_unregister_ticket_usecase(
     session: AsyncSession = Depends(get_session),
 ) -> UnregisterTicketUseCase:
     return UnregisterTicketUseCase(
-        repo=TicketRepository(session=session),
-        client=get_client(),
+        service=_get_ticket_service(session=session),
         cache=get_seats_cache(),
     )
-
 
 ########################################
 # EVENTS

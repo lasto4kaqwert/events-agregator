@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import (
@@ -7,6 +8,8 @@ from pydantic import (
     EmailStr,
     StringConstraints,
 )
+
+from app.core.enums import TicketStatus
 
 NameStr = Annotated[
     str,
@@ -27,14 +30,18 @@ SeatStr = Annotated[
 ]
 
 
-class ExternalAPICreateTicketSchema(BaseModel):
+class RegisterTicketSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     first_name: NameStr
     last_name: NameStr
     seat: SeatStr
     email: EmailStr
 
 
-class LocalRepoCreateTicketSchema(BaseModel):
+class InRouteRegisterTicketSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     event_id: uuid.UUID
     first_name: NameStr
     last_name: NameStr
@@ -42,22 +49,49 @@ class LocalRepoCreateTicketSchema(BaseModel):
     email: EmailStr
 
 
-class LocalRepoTicketSchema(BaseModel):
-    event_id: uuid.UUID
-    ticket_id: uuid.UUID
-
-
-class ExternalAPIDeleteTicketSchema(BaseModel):
-    ticket_id: uuid.UUID
-
-
-class CreatedTicketSchema(BaseModel):
+class UnregisterTicketSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     ticket_id: uuid.UUID
 
 
-class DeletedTicketSchema(BaseModel):
+class RegisteredTicketSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    ticket_id: uuid.UUID
+
+
+class UnregisteredTicketSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     success: bool
+
+
+class TicketRepositorySchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    event_id: uuid.UUID
+    ticket_id: uuid.UUID
+    external_ticket_id: uuid.UUID | None
+    status: TicketStatus
+    seat: str
+    email: EmailStr
+    created_at: datetime | None
+    updated_at: datetime | None
+
+
+class TicketOutboxCreateSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    event_id: uuid.UUID
+    ticket_id: uuid.UUID
+
+    payload: RegisterTicketSchema
+
+
+class TicketOutboxDeleteSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    ticket_id: uuid.UUID
+
+    payload: UnregisterTicketSchema

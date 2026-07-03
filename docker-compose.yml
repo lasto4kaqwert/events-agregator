@@ -18,6 +18,18 @@ services:
 
     volumes:
       - .:/app
+
+  outbox-worker:
+    build: .
+    command: python -m app.workers.ticket_outbox_process
+
+  adminer:
+    image: adminer
+    container_name: events_aggregator_adminer
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
     
   db:
     image: postgres:16-alpine
