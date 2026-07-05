@@ -21,7 +21,17 @@ services:
 
   outbox-worker:
     build: .
+    depends_on:
+      db:
+        condition: service_healthy
     command: python -m app.workers.ticket_outbox_process
+
+  capashino-worker:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python -m app.workers.capashino_outbox_process
 
   adminer:
     image: adminer

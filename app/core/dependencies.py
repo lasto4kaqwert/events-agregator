@@ -4,6 +4,7 @@ from datetime import date
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.clients.capashino_client import CapashinoClient
 from app.clients.events_provider_client import EventsProviderClient
 from app.core.session import get_session
 from app.core.settings import get_settings
@@ -18,6 +19,7 @@ from app.services.repositories import (
     TicketRepository,
 )
 from app.services.workers import (
+    CapashinoOutboxPorcessor,
     TicketOutboxProcessor,
 )
 from app.usecases import (
@@ -54,6 +56,14 @@ def get_client() -> EventsProviderClient:
         base_url=settings.event_provider_host,
         env_client_type=settings.env_client_type,
     )
+
+
+def get_client_capashino() -> CapashinoClient:
+    return CapashinoClient(
+        api_key=settings.event_provider_api_key,
+        base_url=settings.capashino_host,
+    )
+
 
 ########################################
 # SYNCS
@@ -167,4 +177,18 @@ async def get_getter_seats_usecase(
         repo=EventRepository(session=session),
         client=get_client(),
         cache=get_seats_cache(),
+    )
+
+########################################
+# CAPASHINO
+########################################
+
+
+async def build_capashino_outbox_processor(
+    session: AsyncSession,
+) -> TriggerSyncUseCase:
+    return CapashinoOutboxPorcessor(
+        session=session,
+        capashino=get_client_capashino(),
+        outbox_repo=OutboxRepository(session=session),
     )

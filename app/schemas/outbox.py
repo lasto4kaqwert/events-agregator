@@ -29,3 +29,9 @@ class TicketProcessingOutbox(BaseModel):
     external_ticket_id: uuid.UUID | None = None
     create_capashino_outbox: bool = False
     capashino_message: str | None = None
+
+
+class CapashinoProcessingOutbox(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    outbox_status: OutboxStatus

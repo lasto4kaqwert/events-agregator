@@ -86,7 +86,7 @@ class TicketOutboxProcessor:
             async with self.session.begin():
                 await self.outbox_repo.update_status(
                     outbox_id=message.id,
-                    status=OutboxStatus.PENDING,
+                    status=OutboxStatus.PROCESSING,
                 )
 
     async def _apply_result(
@@ -158,7 +158,7 @@ class TicketOutboxProcessor:
             )
         except Exception:
             return TicketProcessingOutbox(
-                outbox_status=OutboxStatus.PENDING,
+                outbox_status=OutboxStatus.PROCESSING,
             )
 
         async with self.session.begin():
@@ -169,7 +169,10 @@ class TicketOutboxProcessor:
             ticket_status=TicketStatus.CONFIRMED,
             external_ticket_id=registered_ticket.ticket_id,
             create_capashino_outbox=True,
-            capashino_message=event.name,
+            capashino_message=(
+                "Вы успешно зарегистрированы на мероприятие"
+                f" - {event.name}"
+            ),
         )
 
     async def _process_ticket_cancel(
