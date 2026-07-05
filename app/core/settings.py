@@ -22,7 +22,9 @@ class Settings(BaseSettings):
     postgres_password: str
 
     event_provider_api_key: str
+
     event_provider_host: str
+    capashino_host: str
 
     sync_init_year: int
     sync_init_month: int

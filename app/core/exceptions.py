@@ -9,8 +9,16 @@ class SeatIsNotAvaiableError(Exception):
 class SynchronizationNotFoundError(Exception):
     pass
 
+######################################################
+#   Ticket Exceptions
+######################################################
+
 
 class ExternalAPIError(Exception):
+    pass
+
+
+class ExternalAPIUnauthorizedError(ExternalAPIError):
     pass
 
 ######################################################
@@ -25,6 +33,10 @@ class TicketNotFoundError(Exception):
 class TicketConflictError(Exception):
     pass
 
+
+class TicketOccupiedError(Exception):
+    pass
+
 ######################################################
 #   Outbox Exceptions
 ######################################################
@@ -35,4 +47,32 @@ class OutboxNotFoundError(Exception):
 
 
 class OutboxConflictError(Exception):
+    pass
+
+######################################################
+#   Outbox Exceptions
+######################################################
+
+
+class CapashinoError(Exception):
+    pass
+
+
+class CapashinoInvalidBodyError(CapashinoError):
+    pass
+
+
+class CapashinoInvalidApiKeyError(CapashinoError):
+    pass
+
+
+class CapashinoIdempotencyParsedError(CapashinoError):
+    pass
+
+
+class CapashinoEmptyMessageError(CapashinoError):
+    pass
+
+
+class CapashinoRepeatEncounterError(CapashinoError):
     pass

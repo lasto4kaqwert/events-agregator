@@ -48,6 +48,9 @@ class OutboxEventType(str, Enum):
     TICKET_CREATE_REQUEST = "ticket.create_request"
     TICKET_CANCEL_REQUEST = "ticket.cancel_request"
 
+    CAPASHINO_CREATED_TICKET = "capashino.created_ticket"
+    CAPASHINO_CANCELED_TICKET = "capashino.canceled_ticket"
+
 ######################################################
 #   Client
 ######################################################

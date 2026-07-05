@@ -118,6 +118,7 @@ async def build_ticket_outbox_processor(
         client=get_client(),
         service=_get_ticket_service(session=session),
         outbox_repo=OutboxRepository(session=session),
+        event_repo=EventRepository(session=session),
     )
 
 

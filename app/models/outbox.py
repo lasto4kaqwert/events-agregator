@@ -34,6 +34,7 @@ class OutboxModel(Base):
             OutboxEventType,
             values_callable=lambda enum: [item.value for item in enum],
             native_enum=False,
+            length=64,
         ),
         nullable=False,
     )

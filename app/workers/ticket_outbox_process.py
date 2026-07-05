@@ -21,33 +21,31 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-async def run_once(
-    processor: TicketOutboxProcessor,
-) -> None:
-    logger.info(
-        "Proccess %s is started at %s",
-        type(processor).__name__,
-        datetime.now(),
-    )
-
-    await processor.run(
-        logger=logger,
-    )
-
 
 async def main() -> None:
     interval_seconds = 15
 
     while True:
+        batch_size = 0
+
         try:
             async with async_session_factory() as session:
                 processor: TicketOutboxProcessor = await builder(session)
-                await run_once(processor)
+                logger.info(
+                    "Proccess %s is started at %s",
+                    type(processor).__name__,
+                    datetime.now(),
+                )
+
+                batch_size = await processor.run(
+                    logger=logger,
+                )
 
         except Exception as exc:
-            logger.info("Process failed with %s", exc)
+            logger.exception("Process failed with %s", exc)
 
-        await asyncio.sleep(interval_seconds)
+        if batch_size == 0:
+            await asyncio.sleep(interval_seconds)
 
 
 if __name__ == "__main__":

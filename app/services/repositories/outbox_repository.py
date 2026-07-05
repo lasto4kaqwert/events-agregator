@@ -49,6 +49,7 @@ class OutboxRepository:
         self,
         limit: int = 10,
         timeout_retry_seconds: int = 300,
+        prefix_type: str = "%",
     ) -> list[OutboxRepositorySchema]:
         timeout_at = datetime.now(timezone.utc) - timedelta(
             seconds=timeout_retry_seconds,
@@ -57,7 +58,7 @@ class OutboxRepository:
         stmt = (
             select(OutboxModel)
             .where(and_(
-                OutboxModel.type.like("ticket.%"),
+                OutboxModel.type.like(f"{prefix_type}.%"),
                 or_(
                     OutboxModel.status == OutboxStatus.PENDING,
                     and_(
@@ -100,6 +101,7 @@ class OutboxRepository:
             )
 
         outbox.status = status
+        outbox.updated_at = datetime.now(timezone.utc)
 
         try:
             await self.session.flush()

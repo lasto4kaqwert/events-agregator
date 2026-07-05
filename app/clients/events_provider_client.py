@@ -1,12 +1,17 @@
 from datetime import date
 from typing import AsyncIterator
-from urllib.parse import urljoin
 from uuid import UUID
 
 import httpx
 
+from app.clients.base_client import BaseClient
 from app.core.enums import EventProviderClientType
-from app.core.exceptions import ExternalAPIError
+from app.core.exceptions import (
+    EventNotFoundError,
+    ExternalAPIError,
+    ExternalAPIUnauthorizedError,
+    TicketOccupiedError,
+)
 from app.paginators.events_paginator import EventsPaginator
 from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
@@ -18,24 +23,15 @@ from app.schemas.ticket import (
 )
 
 
-class EventsProviderClient:
+class EventsProviderClient(BaseClient):
     def __init__(
         self,
         base_url: str,
         api_key: str,
         env_client_type: str = "HTTP",
     ) -> None:
-        self.base_url = base_url
-        self.headers = {
-            "x-api-key": api_key,
-        }
+        super().__init__(base_url, api_key)
         self.env_client_type = env_client_type
-
-    def _build_url(
-        self,
-        path: str,
-    ) -> str:
-        return urljoin(self.base_url, path.lstrip("/"))
 
     def _url_http_to_https(self, url: str | None) -> str | None:
         if not url:
@@ -126,9 +122,21 @@ class EventsProviderClient:
                 json=payload.model_dump(mode="json"),
             )
 
-        if response.status_code >= 400:
-            raise ExternalAPIError(
-                f"Provider register failed: "
+        if response.status_code == 400:
+            raise TicketOccupiedError(
+                f"This ticket is not available (already sold). "
+                f"status={response.status_code}, "
+                f"body={response.text}"
+            )
+        elif response.status_code == 404:
+            raise EventNotFoundError(
+                f"Event {event_id} not found. "
+                f"status={response.status_code}, "
+                f"body={response.text}"
+            )
+        elif response.status_code == 401:
+            raise ExternalAPIUnauthorizedError(
+                f"Invalid API-KEY. "
                 f"status={response.status_code}, "
                 f"body={response.text}"
             )

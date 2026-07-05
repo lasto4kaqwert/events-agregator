@@ -40,19 +40,32 @@ class TicketService:
         ticket_id: uuid.UUID,
         external_ticket_id: uuid.UUID,
     ) -> TicketModel:
-        async with self.session.begin:
-            ticket = await self.get(ticket_id)
+        ticket = await self.get(ticket_id)
 
-            await self.ticket_repo.update_extenal_id(
-                external_ticket_id,
-                ticket=ticket,
-            )
-            await self.ticket_repo.update_status(
-                TicketStatus.CONFIRMED,
-                ticket=ticket,
-            )
+        await self.ticket_repo.update_extenal_id(
+            external_ticket_id,
+            ticket=ticket,
+        )
+        await self.ticket_repo.update_status(
+            TicketStatus.CONFIRMED,
+            ticket=ticket,
+        )
 
         return ticket
+
+    async def fail_ticket(
+        self,
+        ticket_id: uuid.UUID,
+    ) -> TicketModel:
+        ticket = await self.get(ticket_id)
+
+        await self.ticket_repo.update_status(
+            TicketStatus.CANCELED,
+            ticket=ticket,
+        )
+
+        return ticket
+
 
     async def reserve_ticket(
         self,
