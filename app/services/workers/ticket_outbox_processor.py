@@ -10,6 +10,7 @@ from app.core.enums import (
     TicketStatus,
 )
 from app.core.exceptions import (
+    ExternalAPIError,
     TicketOccupiedError,
 )
 from app.schemas.capashino import CapashinoRequestSchema
@@ -18,6 +19,7 @@ from app.schemas.ticket import (
     RegisterTicketSchema,
     TicketOutboxCreateSchema,
     TicketRepositorySchema,
+    UnregisteredTicketSchema,
 )
 
 if TYPE_CHECKING:
@@ -179,7 +181,42 @@ class TicketOutboxProcessor:
         self,
         message: "OutboxRepositorySchema",
     ) -> None:
+        message_data = TicketOutboxCreateSchema.model_validate(message.payload)
+
+        async with self.session.begin():
+            ticket_model = await self.service.get(message_data.ticket_id)
+            ticket = TicketRepositorySchema.model_validate(ticket_model)
+
+        if ticket.status == TicketStatus.CANCELED:
+            return TicketProcessingOutbox(
+                outbox_status=OutboxStatus.CANCELED,
+            )
+        elif ticket.status == TicketStatus.PENDING:
+            return TicketProcessingOutbox(
+                outbox_status=OutboxStatus.CONFIRMED,
+                ticket_status=TicketStatus.CANCELED,
+            )
+
+        try:
+            await self.client.unregister(
+                event_id=ticket.event_id,
+                payload=UnregisteredTicketSchema.model_validate(message_data.payload),
+            )
+        except ExternalAPIError:
+            return TicketProcessingOutbox(
+                outbox_status=OutboxStatus.PROCESSING,
+            )
+
+        async with self.session.begin():
+            event = await self.event_repo.get_describe(ticket.event_id)
+
         return TicketProcessingOutbox(
             outbox_status=OutboxStatus.CONFIRMED,
             ticket_status=TicketStatus.CANCELED,
+            create_capashino_outbox=True,
+            capashino_message=(
+                f"Ваша регистрация на мероприятие {event.name}"
+                " была успешно отменена."
+            ),
         )
+
