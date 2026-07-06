@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 async def main() -> None:
-    interval_seconds = 15
+    interval_seconds = 5
 
     while True:
         batch_size = 0
