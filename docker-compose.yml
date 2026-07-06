@@ -1,36 +1,61 @@
 services:
+  migrate:
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${POSTGRES_CONNECTION_STRING}
+      PYTHONPATH: /app
+    volumes:
+      - .:/app
+    command: alembic upgrade head
+
   app:
     build: .
     env_file:
       - .env
     container_name: events_agregator
-
     depends_on:
-      db:
-        condition: service_healthy
-    
+      migrate:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: ${POSTGRES_CONNECTION_STRING}
       PYTHONPATH: /app
-    
     ports:
       - "8000:8000"
-
     volumes:
       - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
   outbox-worker:
     build: .
+    env_file:
+      - .env
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: ${POSTGRES_CONNECTION_STRING}
+      PYTHONPATH: /app
+    volumes:
+      - .:/app
     command: python -m app.workers.ticket_outbox_process
 
   capashino-worker:
     build: .
+    env_file:
+      - .env
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: ${POSTGRES_CONNECTION_STRING}
+      PYTHONPATH: /app
+    volumes:
+      - .:/app
     command: python -m app.workers.capashino_outbox_process
 
   adminer:
@@ -40,20 +65,16 @@ services:
       - db
     ports:
       - "8080:8080"
-    
+
   db:
     image: postgres:16-alpine
     container_name: events_agregator_db
-
     environment:
-      
       POSTGRES_DB: ${POSTGRES_DATABASE_NAME}
       POSTGRES_USER: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
     volumes:
       - events_agregator_data:/var/lib/postgresql/data
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DATABASE_NAME}"]
       interval: "3s"

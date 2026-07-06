@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -60,6 +60,16 @@ class TicketModel(Base):
         default=datetime.now(timezone.utc),
     )
 
+    idempotency_key: Mapped[str | None] = mapped_column(
+        String(128),
+        nullable=True,
+    )
+
+    request_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+    )
+
     __table_args__ = (
         Index(
             "uq_ticket_active_event_seat",
@@ -78,5 +88,11 @@ class TicketModel(Base):
                 TicketStatus.PENDING,
                 TicketStatus.CONFIRMED,
             ]),
+        ),
+        Index(
+            "uq_tickets_idempotency_key",
+            "idempotency_key",
+            unique=True,
+            postgresql_where=text("idempotency_key IS NOT NULL"),
         ),
     )

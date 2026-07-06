@@ -3,6 +3,8 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.enums import OutboxEventType, TicketStatus
+from app.core.exceptions import TicketIdempotencyConflictError
+from app.core.idempotency import get_ticket_route_request_hash
 from app.models.ticket import TicketModel
 from app.schemas.ticket import (
     RegisterTicketSchema,
@@ -73,6 +75,25 @@ class TicketService:
         payload: RegisterTicketSchema,
     ) -> TicketModel:
         async with self.session.begin():
+            idempotency_key = payload.idempotency_key
+            request_hash: str | None = None
+
+            if idempotency_key is not None:
+                request_hash = get_ticket_route_request_hash(
+                    event_id=event_id,
+                    payload=payload,
+                )
+
+                existing_ticket = await self.ticket_repo.get_by_idempotency_key(
+                    idempotency_key=idempotency_key,
+                )
+
+                if existing_ticket is not None:
+                    if existing_ticket.request_hash != request_hash:
+                        raise TicketIdempotencyConflictError
+
+                    return existing_ticket
+
             ticket_id = uuid.uuid4()
 
             ticket = await self.ticket_repo.create(
@@ -85,6 +106,8 @@ class TicketService:
                     email=payload.email,
                     created_at=None,
                     updated_at=None,
+                    idempotency_key=idempotency_key,
+                    request_hash=request_hash,
                 )
             )
 
@@ -98,6 +121,7 @@ class TicketService:
                         last_name=payload.last_name,
                         seat=payload.seat,
                         email=payload.email,
+                        idempotency_key=idempotency_key,
                     ),
                 ).model_dump(mode="json"),
             )

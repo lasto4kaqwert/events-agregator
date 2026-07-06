@@ -37,6 +37,10 @@ class TicketConflictError(Exception):
 class TicketOccupiedError(Exception):
     pass
 
+
+class TicketIdempotencyConflictError(Exception):
+    pass
+
 ######################################################
 #   Outbox Exceptions
 ######################################################

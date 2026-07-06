@@ -16,7 +16,7 @@ from app.core.exceptions import (
 from app.schemas.capashino import CapashinoRequestSchema
 from app.schemas.outbox import OutboxRepositorySchema, TicketProcessingOutbox
 from app.schemas.ticket import (
-    RegisterTicketSchema,
+    ExternalAPIRegisterTicketSchema,
     TicketOutboxCreateSchema,
     TicketRepositorySchema,
     UnregisteredTicketSchema,
@@ -151,7 +151,12 @@ class TicketOutboxProcessor:
         try:
             registered_ticket = await self.client.register(
                 event_id=ticket.event_id,
-                payload=RegisterTicketSchema.model_validate(message_data.payload),
+                payload=ExternalAPIRegisterTicketSchema(
+                    first_name=message_data.payload.first_name,
+                    last_name=message_data.payload.last_name,
+                    seat=message_data.payload.seat,
+                    email=message_data.payload.email,
+                )
             )
         except TicketOccupiedError:
             return TicketProcessingOutbox(

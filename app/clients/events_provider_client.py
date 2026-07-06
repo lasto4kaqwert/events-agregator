@@ -16,8 +16,8 @@ from app.paginators.events_paginator import EventsPaginator
 from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
 from app.schemas.ticket import (
+    ExternalAPIRegisterTicketSchema,
     RegisteredTicketSchema,
-    RegisterTicketSchema,
     UnregisteredTicketSchema,
     UnregisterTicketSchema,
 )
@@ -113,7 +113,7 @@ class EventsProviderClient(BaseClient):
     async def register(
         self,
         event_id: UUID,
-        payload: RegisterTicketSchema,
+        payload: ExternalAPIRegisterTicketSchema,
     ) -> RegisteredTicketSchema:
         async with httpx.AsyncClient() as client:
             response = await client.post(

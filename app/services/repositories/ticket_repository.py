@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,6 +33,18 @@ class TicketRepository:
             )
         return ticket
 
+    async def get_by_idempotency_key(
+        self,
+        idempotency_key: uuid.UUID,
+    ) -> TicketModel | None:
+        stmt = (
+            select(TicketModel)
+            .where(TicketModel.idempotency_key == idempotency_key)
+        )
+
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def create(
         self,
         payload: TicketRepositorySchema,
@@ -42,12 +55,15 @@ class TicketRepository:
             ticket = TicketModel(ticket_id=payload.ticket_id)
             self.session.add(ticket)
 
+        ticket.external_ticket_id = payload.external_ticket_id
         ticket.event_id = payload.event_id
         ticket.status = payload.status
         ticket.seat = payload.seat
         ticket.email = payload.email
         ticket.created_at = datetime.now(timezone.utc)
         ticket.updated_at = datetime.now(timezone.utc)
+        ticket.idempotency_key = payload.idempotency_key
+        ticket.request_hash = payload.request_hash
 
         try:
             await self.session.flush()

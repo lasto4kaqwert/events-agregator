@@ -29,6 +29,23 @@ SeatStr = Annotated[
     ),
 ]
 
+IdempotencyKeyStr = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=128,
+    ),
+]
+
+
+class ExternalAPIRegisterTicketSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    first_name: NameStr
+    last_name: NameStr
+    seat: SeatStr
+    email: EmailStr
 
 class RegisterTicketSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -37,6 +54,7 @@ class RegisterTicketSchema(BaseModel):
     last_name: NameStr
     seat: SeatStr
     email: EmailStr
+    idempotency_key: IdempotencyKeyStr | None = None
 
 
 class InRouteRegisterTicketSchema(BaseModel):
@@ -47,6 +65,7 @@ class InRouteRegisterTicketSchema(BaseModel):
     last_name: NameStr
     seat: SeatStr
     email: EmailStr
+    idempotency_key: IdempotencyKeyStr | None = None
 
 
 class UnregisterTicketSchema(BaseModel):
@@ -78,6 +97,8 @@ class TicketRepositorySchema(BaseModel):
     email: EmailStr
     created_at: datetime | None
     updated_at: datetime | None
+    idempotency_key: str | None = None
+    request_hash: str | None = None
 
 
 class TicketOutboxCreateSchema(BaseModel):

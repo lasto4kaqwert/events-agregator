@@ -7,6 +7,7 @@ from app.core.exceptions import (
     EventNotFoundError,
     SeatIsNotAvaiableError,
     SynchronizationNotFoundError,
+    TicketIdempotencyConflictError,
     TicketNotFoundError,
 )
 
@@ -57,3 +58,11 @@ async def validation_exception_handler(
     exc: RequestValidationError,
 ):
     return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+
+@app.exception_handler(TicketIdempotencyConflictError)
+async def ticket_idempotency_conflict_handler(
+    _: Request,
+    exc: TicketIdempotencyConflictError,
+):
+    return JSONResponse(status_code=409, content={"detail": str(exc)})
