@@ -20,83 +20,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.execute("""
-        UPDATE tickets
-        SET status = 'confirmed'
-        WHERE status IS NULL
-    """)
-    op.execute("""
-        UPDATE tickets
-        SET created_at = now()
-        WHERE created_at IS NULL
-    """)
-    op.execute("""
-        UPDATE tickets
-        SET updated_at = now()
-        WHERE updated_at IS NULL
-    """)
-
-    op.alter_column(
-        "tickets",
-        "status",
-        existing_type=sa.String(),
-        nullable=False,
-    )
-    op.alter_column(
-        "tickets",
-        "seat",
-        existing_type=sa.String(),
-        nullable=True,
-    )
-    op.alter_column(
-        "tickets",
-        "email",
-        existing_type=sa.String(),
-        nullable=True,
-    )
-    op.alter_column(
-        "tickets",
-        "created_at",
-        existing_type=sa.DateTime(timezone=True),
-        nullable=False,
-    )
-    op.alter_column(
-        "tickets",
-        "updated_at",
-        existing_type=sa.DateTime(timezone=True),
-        nullable=False,
-    )
+    pass
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.alter_column(
-        "tickets",
-        "status",
-        existing_type=sa.Stirng(),
-        nullable=True,
-    )
-    op.alter_column(
-        "tickets",
-        "seat",
-        existing_type=sa.String(),
-        nullable=True,
-    )
-    op.alter_column(
-        "tickets",
-        "email",
-        existing_type=sa.String(),
-        nullable=True,
-    )
-    op.alter_column(
-        "tickets",
-        "created_at",
-        existing_type=sa.DateTime(timezone=True),
-        nullable=True,
-    )
-    op.alter_column(
-        "tickets",
-        "updated_at",
-        existing_type=sa.DateTime(timezone=True),
-        nullable=True,
-    )
+    pass

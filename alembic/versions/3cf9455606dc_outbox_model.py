@@ -30,12 +30,32 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('ix_outbox_status_created_at', 'outbox', ['status', 'created_at'], unique=False)
+
     op.add_column('tickets', sa.Column('external_ticket_id', sa.UUID(), nullable=True))
-    op.add_column('tickets', sa.Column('status', sa.Enum('pending', 'confirmed', 'canceled', name='ticketstatus', native_enum=False), nullable=False))
-    op.add_column('tickets', sa.Column('seat', sa.String(length=16), nullable=False))
-    op.add_column('tickets', sa.Column('email', sa.String(length=64), nullable=False))
-    op.add_column('tickets', sa.Column('created_at', sa.DateTime(timezone=True), nullable=False))
-    op.add_column('tickets', sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False))
+    op.add_column('tickets', sa.Column('status', sa.Enum('pending', 'confirmed', 'canceled', name='ticketstatus', native_enum=False), nullable=True))
+    op.add_column('tickets', sa.Column('seat', sa.String(length=16), nullable=True))
+    op.add_column('tickets', sa.Column('email', sa.String(length=64), nullable=True))
+    op.add_column('tickets', sa.Column('created_at', sa.DateTime(timezone=True), nullable=True))
+    op.add_column('tickets', sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True))
+
+    op.execute("""
+        UPDATE tickets
+        SET
+            external_ticket_id = ticket_id,
+            status = 'confirmed',
+            seat = 'legacy-' || left(ticket_id::text, 8),
+            email = 'legacy+' || replace(ticket_id::text, '-', '') || '@local.invalid',
+            created_at = now(),
+            updated_at = now()
+        WHERE status IS NULL
+    """)
+
+    op.alter_column('tickets', 'status', nullable=False)
+    op.alter_column('tickets', 'seat', nullable=False)
+    op.alter_column('tickets', 'email', nullable=False)
+    op.alter_column('tickets', 'created_at', nullable=False)
+    op.alter_column('tickets', 'updated_at', nullable=False)
+
     op.create_index('uq_ticket_active_event_email', 'tickets', ['event_id', 'email'], unique=True, postgresql_where=sa.text("status IN ('pending', 'confirmed')"))
     op.create_index('uq_ticket_active_event_seat', 'tickets', ['event_id', 'seat'], unique=True, postgresql_where=sa.text("status IN ('pending', 'confirmed')"))
     # ### end Alembic commands ###
