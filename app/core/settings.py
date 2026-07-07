@@ -32,6 +32,11 @@ class Settings(BaseSettings):
 
     env_client_type: EventProviderClientType = EventProviderClientType.HTTP
 
+    sentry_dsn: str | None
+
+    environment: str = "local"
+    sentry_traces_sample_rate: float = 0.0
+
     @property
     def async_engine_connection_string(
         self,

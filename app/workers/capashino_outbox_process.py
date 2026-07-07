@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from app.core.async_session_factory import async_session_factory
 from app.core.dependencies import build_capashino_outbox_processor as builder
+from app.core.error_tracking import error_tracking
 
 if TYPE_CHECKING:
     from app.services.workers import CapashinoOutboxPorcessor
@@ -49,4 +50,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    error_tracking()
     asyncio.run(main())

@@ -4,6 +4,7 @@ import sys
 
 from app.core.async_session_factory import async_session_factory
 from app.core.dependencies import build_trigger_sync_usecase
+from app.core.error_tracking import error_tracking
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,4 +41,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    error_tracking()
     asyncio.run(main())

@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
+from app.core.error_tracking import error_tracking
 from app.core.exceptions import (
     EventNotFoundError,
     SeatIsNotAvaiableError,
@@ -10,6 +11,8 @@ from app.core.exceptions import (
     TicketIdempotencyConflictError,
     TicketNotFoundError,
 )
+
+error_tracking()
 
 app = FastAPI(
     title="Events Agregator API",
