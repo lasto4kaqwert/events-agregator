@@ -1,3 +1,5 @@
+import time
+from collections.abc import Awaitable
 from datetime import date
 from typing import AsyncIterator
 from uuid import UUID
@@ -12,6 +14,7 @@ from app.core.exceptions import (
     ExternalAPIUnauthorizedError,
     TicketOccupiedError,
 )
+from app.core.metrics import PROVIDER_DURATION, PROVIDER_REQUESTS
 from app.paginators.events_paginator import EventsPaginator
 from app.schemas.event import ExternalAPIEventDescribeSchema, ExternalAPIEventsSchema
 from app.schemas.seat import ExternalAPIAvaiableSeatsSchema
@@ -33,6 +36,27 @@ class EventsProviderClient(BaseClient):
         super().__init__(base_url, api_key)
         self.env_client_type = env_client_type
 
+    async def _observe_request(
+        self,
+        endpoint: str,
+        request: Awaitable[httpx.Response],
+    ) -> httpx.Response:
+        started_at = time.monotonic()
+        status = "network_error"
+
+        try:
+            response = await request
+            status = str(response.status_code)
+            return response
+        finally:
+            PROVIDER_REQUESTS.labels(
+                endpoint=endpoint,
+                status=status,
+            ).inc()
+            PROVIDER_DURATION.labels(
+                endpoint=endpoint,
+            ).observe(time.monotonic() - started_at)
+
     def _url_http_to_https(self, url: str | None) -> str | None:
         if not url:
             return None
@@ -52,12 +76,13 @@ class EventsProviderClient(BaseClient):
         changed_at: date,
     ) -> ExternalAPIEventsSchema:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                self._build_url("/api/events/"),
-                params={
-                    "changed_at": changed_at.strftime("%Y-%m-%d"),
-                },
-                headers=self.headers,
+            response = await self._observe_request("/events", client.get(
+                    self._build_url("/api/events/"),
+                    params={
+                        "changed_at": changed_at.strftime("%Y-%m-%d"),
+                    },
+                    headers=self.headers,
+                )
             )
 
         if response.status_code >= 400:
@@ -77,9 +102,10 @@ class EventsProviderClient(BaseClient):
             if self.env_client_type is EventProviderClientType.HTTPS:
                 next = self._url_http_to_https(next)
 
-            response = await client.get(
-                next,
-                headers=self.headers,
+            response = await self._observe_request("/events", client.get(
+                    next,
+                    headers=self.headers,
+                )
             )
 
         if response.status_code >= 400:
@@ -96,9 +122,10 @@ class EventsProviderClient(BaseClient):
         event_id: UUID,
     ) -> ExternalAPIAvaiableSeatsSchema:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                self._build_url(f"/api/events/{event_id}/seats/"),
-                headers=self.headers,
+            response = await self._observe_request("/seats", client.get(
+                    self._build_url(f"/api/events/{event_id}/seats/"),
+                    headers=self.headers,
+                )
             )
 
         if response.status_code >= 400:
@@ -116,10 +143,11 @@ class EventsProviderClient(BaseClient):
         payload: ExternalAPIRegisterTicketSchema,
     ) -> RegisteredTicketSchema:
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                self._build_url(f"/api/events/{event_id}/register/"),
-                headers=self.headers,
-                json=payload.model_dump(mode="json"),
+            response = await self._observe_request("/register", client.post(
+                    self._build_url(f"/api/events/{event_id}/register/"),
+                    headers=self.headers,
+                    json=payload.model_dump(mode="json"),
+                )
             )
 
         if response.status_code == 400:
@@ -149,11 +177,12 @@ class EventsProviderClient(BaseClient):
         payload: UnregisterTicketSchema,
     ) -> UnregisteredTicketSchema:
         async with httpx.AsyncClient() as client:
-            response = await client.request(
-                "DELETE",
-                self._build_url(f"/api/events/{event_id}/unregister/"),
-                headers=self.headers,
-                json=payload.model_dump(mode="json"),
+            response = await self._observe_request("/unregister", client.request(
+                    "DELETE",
+                    self._build_url(f"/api/events/{event_id}/unregister/"),
+                    headers=self.headers,
+                    json=payload.model_dump(mode="json"),
+                )
             )
 
         if response.status_code >= 400:

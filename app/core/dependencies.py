@@ -44,7 +44,7 @@ def get_seats_cache() -> SeatsCache:
     return seats_cache
 
 ########################################
-# SYNCS
+# CLIENTS
 ########################################
 
 settings = get_settings()
@@ -110,6 +110,13 @@ async def get_trigger_sync_usecase(
 # TICKETS
 ########################################
 
+
+async def get_ticket_repository(
+    session: AsyncSession = Depends(get_session),
+) -> TicketRepository:
+    return TicketRepository(session=session)
+
+
 def _get_ticket_service(
     session: AsyncSession,
 ) -> TicketService:
@@ -152,6 +159,12 @@ async def get_unregister_ticket_usecase(
 ########################################
 # EVENTS
 ########################################
+
+
+async def get_event_repository(
+    session: AsyncSession = Depends(get_session),
+) -> EventRepository:
+    return EventRepository(session=session)
 
 
 async def get_getter_events_usecase(

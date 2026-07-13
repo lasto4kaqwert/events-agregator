@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -113,3 +113,20 @@ class TicketRepository:
                 raise TicketConflictError from exc
         else:
             raise TicketNotFoundError("Ticket is not received")
+
+    async def count_created(
+        self,
+    ) -> int:
+        result = await self.session.execute(
+            select(func.count(TicketModel.ticket_id))
+        )
+        return result.scalar_one()
+
+    async def count_cancelled(
+        self,
+    ) -> int:
+        result = await self.session.execute(
+            select(func.count(TicketModel.ticket_id))
+            .where(TicketModel.status == TicketStatus.CANCELED)
+        )
+        return result.scalar_one()

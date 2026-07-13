@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.api.metrics import metrics_router
 from app.api.router import api_router
 from app.core.error_tracking import error_tracking
 from app.core.exceptions import (
@@ -11,6 +12,7 @@ from app.core.exceptions import (
     TicketIdempotencyConflictError,
     TicketNotFoundError,
 )
+from app.core.middlewares import PrometheusMiddleware
 
 error_tracking()
 
@@ -18,9 +20,11 @@ app = FastAPI(
     title="Events Agregator API",
     version="1.0.0",
 )
+app.add_middleware(PrometheusMiddleware)
 
 
 app.include_router(api_router, prefix="/api")
+app.include_router(metrics_router, prefix="/metrics")
 
 
 @app.exception_handler(EventNotFoundError)

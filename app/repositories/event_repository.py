@@ -105,3 +105,11 @@ class EventRepository:
         await self.session.commit()
 
         return saved
+
+    async def count(
+        self,
+    ) -> int:
+        result = await self.session.execute(
+            select(func.count(Event.id))
+        )
+        return result.scalar_one()
