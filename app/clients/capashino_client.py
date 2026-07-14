@@ -23,9 +23,9 @@ class CapashinoClient(BaseClient):
                 json=payload.model_dump(mode="json"),
             )
 
-        if response.status_code == 400:
-            raise CapashinoInvalidBodyError(
-                "Capashino message failed with incorrect reference_id or invalid body."
+        if response.status_code == 500:
+            raise CapashinoRepeatEncounterError(
+                "Capashino message failed with repeat workers message."
                 f"status={response.status_code}"
                 f"body={response.text}"
             )
@@ -47,11 +47,12 @@ class CapashinoClient(BaseClient):
                 f"status={response.status_code}"
                 f"body={response.text}"
             )
-        elif response.status_code >= 500:
-            raise CapashinoRepeatEncounterError(
-                "Capashino message failed with repeat workers message."
+        elif response.status_code >= 400:
+            raise CapashinoInvalidBodyError(
+                "Capashino message failed with incorrect reference_id or invalid body."
                 f"status={response.status_code}"
                 f"body={response.text}"
             )
+
 
         return CapashinoResponseSchema.model_validate(response.json())

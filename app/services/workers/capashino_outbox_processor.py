@@ -8,7 +8,11 @@ from app.core.enums import (
     OutboxEventType,
     OutboxStatus,
 )
-from app.core.exceptions import CapashinoError
+from app.core.exceptions import (
+    CapashinoError,
+    CapashinoIdempotencyParsedError,
+    CapashinoRepeatEncounterError,
+)
 from app.schemas.capashino import CapashinoRequestSchema
 from app.schemas.outbox import (
     CapashinoProcessingOutbox,
@@ -97,6 +101,14 @@ class CapashinoOutboxPorcessor:
 
         try:
             await self.capashino.send_message(message_data)
+        except CapashinoIdempotencyParsedError:
+            return CapashinoProcessingOutbox(
+                outbox_status=OutboxStatus.CONFIRMED,
+            )
+        except CapashinoRepeatEncounterError:
+            return CapashinoProcessingOutbox(
+                outbox_status=OutboxStatus.PROCESSING,
+            )
         except CapashinoError:
             return CapashinoProcessingOutbox(
                 outbox_status=OutboxStatus.FAILED,
